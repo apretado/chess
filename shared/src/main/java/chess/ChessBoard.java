@@ -1,5 +1,8 @@
 package chess;
 
+import java.util.Arrays;
+import java.util.Objects;
+
 /**
  * A chessboard that can hold and rearrange chess pieces.
  * <p>
@@ -8,8 +11,10 @@ package chess;
  */
 public class ChessBoard {
 
+    private ChessPiece[][] board;
+
     public ChessBoard() {
-        
+        board = new ChessPiece[8][8];
     }
 
     /**
@@ -19,7 +24,7 @@ public class ChessBoard {
      * @param piece    the piece to add
      */
     public void addPiece(ChessPosition position, ChessPiece piece) {
-        throw new RuntimeException("Not implemented");
+        board[8 - position.getRow()][position.getColumn() - 1] = piece;
     }
 
     /**
@@ -30,7 +35,7 @@ public class ChessBoard {
      * position
      */
     public ChessPiece getPiece(ChessPosition position) {
-        throw new RuntimeException("Not implemented");
+        return board[8 - position.getRow()][position.getColumn() - 1];
     }
 
     /**
@@ -38,6 +43,74 @@ public class ChessBoard {
      * (How the game of chess normally starts)
      */
     public void resetBoard() {
-        throw new RuntimeException("Not implemented");
+        board = new ChessPiece[][] {
+                {
+                    new ChessPiece(ChessGame.TeamColor.BLACK, ChessPiece.PieceType.ROOK),
+                    new ChessPiece(ChessGame.TeamColor.BLACK, ChessPiece.PieceType.KNIGHT),
+                    new ChessPiece(ChessGame.TeamColor.BLACK, ChessPiece.PieceType.BISHOP),
+                    new ChessPiece(ChessGame.TeamColor.BLACK, ChessPiece.PieceType.QUEEN),
+                    new ChessPiece(ChessGame.TeamColor.BLACK, ChessPiece.PieceType.KING),
+                    new ChessPiece(ChessGame.TeamColor.BLACK, ChessPiece.PieceType.BISHOP),
+                    new ChessPiece(ChessGame.TeamColor.BLACK, ChessPiece.PieceType.KNIGHT),
+                    new ChessPiece(ChessGame.TeamColor.BLACK, ChessPiece.PieceType.ROOK)
+                },
+                {
+                    new ChessPiece(ChessGame.TeamColor.BLACK, ChessPiece.PieceType.PAWN),
+                    new ChessPiece(ChessGame.TeamColor.BLACK, ChessPiece.PieceType.PAWN),
+                    new ChessPiece(ChessGame.TeamColor.BLACK, ChessPiece.PieceType.PAWN),
+                    new ChessPiece(ChessGame.TeamColor.BLACK, ChessPiece.PieceType.PAWN),
+                    new ChessPiece(ChessGame.TeamColor.BLACK, ChessPiece.PieceType.PAWN),
+                    new ChessPiece(ChessGame.TeamColor.BLACK, ChessPiece.PieceType.PAWN),
+                    new ChessPiece(ChessGame.TeamColor.BLACK, ChessPiece.PieceType.PAWN),
+                    new ChessPiece(ChessGame.TeamColor.BLACK, ChessPiece.PieceType.PAWN)
+                },
+                {null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null},
+                {
+                    new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.PAWN),
+                    new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.PAWN),
+                    new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.PAWN),
+                    new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.PAWN),
+                    new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.PAWN),
+                    new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.PAWN),
+                    new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.PAWN),
+                    new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.PAWN)
+                },
+
+                {
+                    new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.ROOK),
+                    new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.KNIGHT),
+                    new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.BISHOP),
+                    new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.QUEEN),
+                    new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.KING),
+                    new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.BISHOP),
+                    new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.KNIGHT),
+                    new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.ROOK)
+                }
+        };
+
+    }
+
+    @Override
+    public String toString() {
+        return "ChessBoard{" +
+                "board=" + Arrays.deepToString(board) +
+                '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        ChessBoard that = (ChessBoard) o;
+        return Objects.deepEquals(board, that.board);
+    }
+
+    @Override
+    public int hashCode() {
+        return Arrays.deepHashCode(board);
     }
 }
