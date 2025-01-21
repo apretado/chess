@@ -12,9 +12,10 @@ import java.util.Objects;
 public class ChessBoard {
 
     private ChessPiece[][] board;
+    private static final int BOARD_SIZE = 8;
 
     public ChessBoard() {
-        board = new ChessPiece[8][8];
+        board = new ChessPiece[BOARD_SIZE][BOARD_SIZE];
     }
 
     /**
@@ -24,7 +25,7 @@ public class ChessBoard {
      * @param piece    the piece to add
      */
     public void addPiece(ChessPosition position, ChessPiece piece) {
-        board[8 - position.getRow()][position.getColumn() - 1] = piece;
+        board[BOARD_SIZE - position.getRow()][position.getColumn() - 1] = piece;
     }
 
     /**
@@ -35,7 +36,11 @@ public class ChessBoard {
      * position
      */
     public ChessPiece getPiece(ChessPosition position) {
-        return board[8 - position.getRow()][position.getColumn() - 1];
+        return board[BOARD_SIZE - position.getRow()][position.getColumn() - 1];
+    }
+
+    public static int getBoardSize() {
+        return BOARD_SIZE;
     }
 
     /**
