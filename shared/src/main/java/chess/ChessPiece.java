@@ -77,10 +77,21 @@ public class ChessPiece {
      */
     public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
         var pieceMoves = new ArrayList<ChessMove>();
-        if(getPieceType() == PieceType.PAWN) {
 
+        switch (getPieceType()) {
+            case PieceType.BISHOP:
+                return PieceMovesCalculator.bishop(board, myPosition);
+            case PieceType.KING:
+                return PieceMovesCalculator.king(board, myPosition);
+            case PieceType.KNIGHT:
+                return PieceMovesCalculator.knight(board, myPosition);
+            case PieceType.PAWN:
+                return PieceMovesCalculator.pawn(board, myPosition);
+            case PieceType.QUEEN:
+                return PieceMovesCalculator.queen(board, myPosition);
+            case PieceType.ROOK:
+                return PieceMovesCalculator.rook(board, myPosition);
         }
-
 
         return pieceMoves;
     }
