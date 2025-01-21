@@ -80,17 +80,17 @@ public class ChessPiece {
 
         switch (getPieceType()) {
             case PieceType.BISHOP:
-                return PieceMovesCalculator.bishop(board, myPosition);
+                return PieceMovesCalculator.bishop(board, myPosition, this.getTeamColor());
             case PieceType.KING:
-                return PieceMovesCalculator.king(board, myPosition);
+                return PieceMovesCalculator.king(board, myPosition, this.getTeamColor());
             case PieceType.KNIGHT:
-                return PieceMovesCalculator.knight(board, myPosition);
+                return PieceMovesCalculator.knight(board, myPosition, this.getTeamColor());
             case PieceType.PAWN:
-                return PieceMovesCalculator.pawn(board, myPosition);
+                return PieceMovesCalculator.pawn(board, myPosition, this.getTeamColor());
             case PieceType.QUEEN:
-                return PieceMovesCalculator.queen(board, myPosition);
+                return PieceMovesCalculator.queen(board, myPosition, this.getTeamColor());
             case PieceType.ROOK:
-                return PieceMovesCalculator.rook(board, myPosition);
+                return PieceMovesCalculator.rook(board, myPosition, this.getTeamColor());
         }
 
         return pieceMoves;
