@@ -78,21 +78,14 @@ public class ChessPiece {
     public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
         var pieceMoves = new ArrayList<ChessMove>();
 
-        switch (getPieceType()) {
-            case PieceType.BISHOP:
-                return PieceMovesCalculator.bishop(board, myPosition, this.getTeamColor());
-            case PieceType.KING:
-                return PieceMovesCalculator.king(board, myPosition, this.getTeamColor());
-            case PieceType.KNIGHT:
-                return PieceMovesCalculator.knight(board, myPosition, this.getTeamColor());
-            case PieceType.PAWN:
-                return PieceMovesCalculator.pawn(board, myPosition, this.getTeamColor());
-            case PieceType.QUEEN:
-                return PieceMovesCalculator.queen(board, myPosition, this.getTeamColor());
-            case PieceType.ROOK:
-                return PieceMovesCalculator.rook(board, myPosition, this.getTeamColor());
-        }
+        return switch (getPieceType()) {
+            case PieceType.BISHOP -> PieceMovesCalculator.bishop(board, myPosition, this.getTeamColor());
+            case PieceType.KING -> PieceMovesCalculator.king(board, myPosition, this.getTeamColor());
+            case PieceType.KNIGHT -> PieceMovesCalculator.knight(board, myPosition, this.getTeamColor());
+            case PieceType.PAWN -> PieceMovesCalculator.pawn(board, myPosition, this.getTeamColor());
+            case PieceType.QUEEN -> PieceMovesCalculator.queen(board, myPosition, this.getTeamColor());
+            case PieceType.ROOK -> PieceMovesCalculator.rook(board, myPosition, this.getTeamColor());
+        };
 
-        return pieceMoves;
     }
 }
