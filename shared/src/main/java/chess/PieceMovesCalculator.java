@@ -23,13 +23,6 @@ public class PieceMovesCalculator {
     }
 
     public static ArrayList<ChessMove> pawn(ChessBoard board, ChessPosition myPosition, ChessGame.TeamColor myColor) {
-        final ChessPiece.PieceType[] promotionPieces = {
-                ChessPiece.PieceType.QUEEN,
-                ChessPiece.PieceType.BISHOP,
-                ChessPiece.PieceType.ROOK,
-                ChessPiece.PieceType.KNIGHT
-        };
-
         var moves = new ArrayList<ChessMove>();
         int direction = myColor == ChessGame.TeamColor.WHITE ? 1 : -1;
         int[][] attackMovements = new int[][]{{direction, -1}, {direction, 1}};
@@ -40,19 +33,13 @@ public class PieceMovesCalculator {
         var newPosition = new ChessPosition(row + direction, col);
         if (inBounds(newPosition) && board.getPiece(newPosition) == null) {
             // Promotion case
-            if (newPosition.getRow() == 1 || newPosition.getRow() == ChessBoard.getBoardSize()) {
-                for (ChessPiece.PieceType promotionPiece : promotionPieces) {
-                    moves.add(new ChessMove(myPosition, newPosition, promotionPiece));
-                }
-            } else {
-                moves.add(new ChessMove(myPosition, newPosition, null));
+            moves.addAll(pawnPromotionMoves(board, myPosition, newPosition));
 
-                // Pushing the pawn 2 spaces
-                if ((myColor == ChessGame.TeamColor.WHITE && row == 2) || (myColor == ChessGame.TeamColor.BLACK && row == 7)) {
-                    newPosition = new ChessPosition(row + 2 * direction, col);
-                    if (board.getPiece(newPosition) == null) {
-                        moves.add(new ChessMove(myPosition, newPosition, null));
-                    }
+            // Pushing the pawn 2 spaces
+            if ((myColor == ChessGame.TeamColor.WHITE && row == 2) || (myColor == ChessGame.TeamColor.BLACK && row == 7)) {
+                newPosition = new ChessPosition(row + 2 * direction, col);
+                if (board.getPiece(newPosition) == null) {
+                    moves.add(new ChessMove(myPosition, newPosition, null));
                 }
             }
         }
@@ -63,17 +50,31 @@ public class PieceMovesCalculator {
             if (inBounds(newPosition)) {
                 ChessPiece occupyingPiece = board.getPiece(newPosition);
                 if (occupyingPiece != null && occupyingPiece.getTeamColor() != myColor) {
-                    // Promotion case
-                    if (newPosition.getRow() == 1 || newPosition.getRow() == ChessBoard.getBoardSize()) {
-                        for (ChessPiece.PieceType promotionPiece : promotionPieces) {
-                            moves.add(new ChessMove(myPosition, newPosition, promotionPiece));
-                        }
-                    } else {
-                        moves.add(new ChessMove(myPosition, newPosition, null));
-                    }
+                    moves.addAll(pawnPromotionMoves(board, myPosition, newPosition));
                 }
             }
         }
+        return moves;
+    }
+
+    public static ArrayList<ChessMove> pawnPromotionMoves(ChessBoard board, ChessPosition myPosition, ChessPosition newPosition) {
+        final ChessPiece.PieceType[] promotionPieces = {
+            ChessPiece.PieceType.QUEEN,
+            ChessPiece.PieceType.BISHOP,
+            ChessPiece.PieceType.ROOK,
+            ChessPiece.PieceType.KNIGHT
+        };
+
+        var moves = new ArrayList<ChessMove>();
+
+        if (newPosition.getRow() == 1 || newPosition.getRow() == ChessBoard.getBoardSize()) {
+            for (ChessPiece.PieceType promotionPiece : promotionPieces) {
+                moves.add(new ChessMove(myPosition, newPosition, promotionPiece));
+            }
+        } else {
+            moves.add(new ChessMove(myPosition, newPosition, null));
+        }
+
         return moves;
     }
 
