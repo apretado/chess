@@ -1,5 +1,6 @@
 package chess;
 
+import java.util.ArrayList;
 import java.util.Collection;
 
 /**
@@ -71,7 +72,35 @@ public class ChessGame {
      * @return True if the specified team is in check
      */
     public boolean isInCheck(TeamColor teamColor) {
-        throw new RuntimeException("Not implemented");
+        ChessPosition kingPosition = null;
+        var enemyMoves = new ArrayList<ChessMove>();
+
+        // Iterate over each square
+        for (int row = 1; row <= ChessBoard.getBoardSize(); row++) {
+            for (int col = 1; col <= ChessBoard.getBoardSize(); col++) {
+                ChessPosition position = new ChessPosition(row, col);
+                ChessPiece piece = this.getBoard().getPiece(position);
+                if (piece != null) {
+                    // Check if enemy piece
+                    if (piece.getTeamColor() != teamColor) {
+                        enemyMoves.addAll(piece.pieceMoves(board, position));
+                    } else {
+                        // Check if friendly king
+                        if (piece.getPieceType() == ChessPiece.PieceType.KING) {
+                            kingPosition = position;
+                        }
+                    }
+                }
+            }
+        }
+
+        // Check each enemy move to see if its end position includes the friendly king's position
+        for (ChessMove move : enemyMoves) {
+            if (move.getEndPosition().equals(kingPosition)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
