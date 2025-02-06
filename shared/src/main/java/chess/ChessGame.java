@@ -162,6 +162,20 @@ public class ChessGame {
         return false;
     }
 
+    public boolean hasValidMoves(TeamColor teamColor) {
+        for (int row = 1; row <= ChessBoard.getBoardSize(); row++) {
+            for (int col = 1; col <= ChessBoard.getBoardSize(); col++) {
+                var position = new ChessPosition(row, col);
+                ChessPiece piece = this.getBoard().getPiece(position);
+                // Check if its the right color & has valid moves
+                if (piece != null && piece.getTeamColor() == teamColor && !validMoves(position).isEmpty()) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     /**
      * Determines if the given team is in checkmate
      *
@@ -169,7 +183,7 @@ public class ChessGame {
      * @return True if the specified team is in checkmate
      */
     public boolean isInCheckmate(TeamColor teamColor) {
-        throw new RuntimeException("Not implemented");
+        return isInCheck(teamColor) && !hasValidMoves(teamColor);
     }
 
     /**
