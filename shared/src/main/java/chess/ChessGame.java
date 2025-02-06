@@ -84,7 +84,7 @@ public class ChessGame {
         return endPositions;
     }
 
-    private ChessPosition kingPosition(TeamColor teamColor) {
+    private ChessPosition getKingPosition(TeamColor teamColor) {
         // Iterate over each square
         for (int row = 1; row <= ChessBoard.getBoardSize(); row++) {
             for (int col = 1; col <= ChessBoard.getBoardSize(); col++) {
@@ -96,7 +96,7 @@ public class ChessGame {
                 }
             }
         }
-        throw new RuntimeException("King not found in board");
+        return null;
     }
 
     /**
@@ -107,7 +107,7 @@ public class ChessGame {
      */
     public boolean isInCheck(TeamColor teamColor) {
         TeamColor enemyColor = teamColor == TeamColor.WHITE ? TeamColor.BLACK : TeamColor.WHITE;
-        ChessPosition kingPosition = kingPosition(teamColor);
+        ChessPosition kingPosition = getKingPosition(teamColor);
         // Check every enemy end position to see if its the king's position
         for (ChessPosition enemyEndPosition : endPositions(enemyColor)) {
             if (enemyEndPosition.equals(kingPosition)) {
@@ -124,11 +124,7 @@ public class ChessGame {
      * @return True if the specified team is in checkmate
      */
     public boolean isInCheckmate(TeamColor teamColor) {
-        if (isInCheck(teamColor)) {
-
-        }
-
-        return false;
+        throw new RuntimeException("Not implemented");
     }
 
     /**
