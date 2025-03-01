@@ -10,18 +10,23 @@ public class MemoryUserDAO implements UserDAO {
 
     @Override
     public void createUser(UserData userData) throws DataAccessException {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'createUser'");
+        if (users.containsKey(userData.username())) {
+            throw new DataAccessException("Error: already taken");
+        }
+        users.put(userData.username(), userData);
     }
 
     @Override
     public UserData getUser(String username) throws DataAccessException {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getUser'");
+        UserData user = users.get(username);
+        if (user == null) {
+            throw new DataAccessException("Error: unauthorized");
+        }
+        return user;
     }
 
     @Override
-    public void clearUser() throws DataAccessException {
+    public void clearUser() {
         users.clear();
     }
 
