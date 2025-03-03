@@ -1,5 +1,6 @@
 package service;
 
+import java.util.Objects;
 import java.util.UUID;
 
 import dataaccess.AuthDAO;
@@ -35,7 +36,7 @@ public class UserService {
     public LoginResult login(LoginRequest loginRequest) throws DataAccessException {
         // Check username and password
         UserData user = userDAO.getUser(loginRequest.username());
-        if (loginRequest.password() != user.password()) {
+        if (!Objects.equals(loginRequest.password(), user.password())) {
             throw new DataAccessException("Error: unauthorized");
         }
         // Create auth token
