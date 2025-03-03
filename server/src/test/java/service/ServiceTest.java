@@ -14,8 +14,9 @@ import dataaccess.MemoryAuthDAO;
 import dataaccess.MemoryGameDAO;
 import dataaccess.MemoryUserDAO;
 import dataaccess.UserDAO;
-import service.exception.UsernameTakenException;
+import service.request.LoginRequest;
 import service.request.RegisterRequest;
+import service.result.LoginResult;
 import service.result.RegisterResult;
 
 public class ServiceTest {
@@ -31,7 +32,7 @@ public class ServiceTest {
     }
 
     @Test
-    void registerUserSuccess() throws UsernameTakenException {
+    void registerSuccess() throws DataAccessException {
         RegisterRequest registerRequest = new RegisterRequest("username", "password", "email");
         RegisterResult result = userService.register(registerRequest);
         assertEquals("username", result.username());
@@ -44,19 +45,19 @@ public class ServiceTest {
     }
 
     @Test
-    void registerUserError() throws UsernameTakenException {
+    void registerFail() throws DataAccessException {
         RegisterRequest registerRequest = new RegisterRequest("username", "password", "email");
         // Initial registration
         userService.register(registerRequest);
         // Repeat registration with same username
-        UsernameTakenException exception = assertThrows(UsernameTakenException.class, () -> {
+        DataAccessException exception = assertThrows(DataAccessException.class, () -> {
             userService.register(registerRequest);
         });
         assertEquals("Error: already taken", exception.getMessage());
     }
 
     @Test
-    void clear() throws UsernameTakenException {
+    void clear() throws DataAccessException {
         userService.register(new RegisterRequest("username", "password", "email"));
         userService.register(new RegisterRequest("username2", "password2", "email2"));
         clearService.clear();
@@ -72,4 +73,27 @@ public class ServiceTest {
         assertEquals("Error: unauthorized", exception.getMessage());
     }
 
+    @Test
+    void loginSuccess() throws DataAccessException {
+        userService.register(new RegisterRequest("username", "password", "email"));
+        LoginResult loginResult = userService.login(new LoginRequest("username", "password"));
+        assertEquals("username", loginResult.username());
+        assertNotNull(loginResult.authToken());
+    }
+
+    @Test
+    void loginFail() throws DataAccessException {
+        userService.register(new RegisterRequest("username", "password", "email"));
+        // Wrong username
+        DataAccessException exception = assertThrows(DataAccessException.class, () -> {
+            userService.login(new LoginRequest("username8", "password"));
+        });
+        assertEquals("Error: unauthorized", exception.getMessage());
+        
+        // Wrong password
+        exception = assertThrows(DataAccessException.class, () -> {
+            userService.login(new LoginRequest("username8", "password8"));
+        });
+        assertEquals("Error: unauthorized", exception.getMessage());
+    }
 }

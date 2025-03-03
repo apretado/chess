@@ -4,8 +4,8 @@ import java.util.Objects;
 
 import com.google.gson.Gson;
 
+import dataaccess.DataAccessException;
 import service.UserService;
-import service.exception.UsernameTakenException;
 import service.request.RegisterRequest;
 import service.result.ErrorResult;
 import service.result.RegisterResult;
@@ -23,11 +23,12 @@ public class UserHandler {
 
     public Object handleRegister(Request req, Response res) {
         RegisterRequest registerRequest = gson.fromJson(req.body(), RegisterRequest.class);
+        // Check if request contains username, password, email
         try {
             RegisterResult registerResult = this.userService.register(registerRequest);
             res.status(200);
             return gson.toJson(registerResult);
-        } catch (UsernameTakenException e) {
+        } catch (DataAccessException e) {
             return errorHandler(e, res);
         }
     }
