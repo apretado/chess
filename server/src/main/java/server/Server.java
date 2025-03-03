@@ -47,6 +47,7 @@ public class Server {
         Spark.delete("/db", (req, res) -> clearHandler.handleClear(req, res));
         Spark.post("/user", (req, res) -> userHandler.handleRegister(req, res));
         Spark.post("/session", (req, res) -> userHandler.handleLogin(req, res));
+        Spark.delete("/session", (req, res) -> userHandler.handleLogout(req, res));
 
         //This line initializes the server and can be removed once you have a functioning endpoint 
         Spark.init();

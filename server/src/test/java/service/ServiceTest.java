@@ -96,4 +96,25 @@ public class ServiceTest {
         });
         assertEquals("Error: unauthorized", exception.getMessage());
     }
+
+    @Test
+    void logoutSuccess() throws DataAccessException {
+        RegisterResult registerResult = userService.register(new RegisterRequest("username", "password", "email"));
+        userService.logout(registerResult.authToken());
+        DataAccessException exception = assertThrows(DataAccessException.class, () -> {
+            ServiceTest.authDAO.getAuth(registerResult.authToken());
+        });
+        assertEquals("Error: unauthorized", exception.getMessage());
+    }
+
+    @Test
+    void logoutFail() throws DataAccessException {
+        // Register user
+        userService.register(new RegisterRequest("username", "password", "email"));
+        // Try to log out with invalid token
+        DataAccessException exception = assertThrows(DataAccessException.class, () -> {
+            userService.logout("invalidToken");
+        });
+        assertEquals("Error: unauthorized", exception.getMessage());
+    }
 }

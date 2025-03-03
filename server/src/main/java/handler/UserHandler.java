@@ -54,6 +54,20 @@ public class UserHandler {
         }
     }
 
+    public Object handleLogout(Request req, Response res) {
+        // Parse json
+        String authToken = req.headers("authorization");
+        // Try to logout
+        try {
+            this.userService.logout(authToken);
+            res.status(200);
+            res.type("application/json");
+            return "{}";
+        } catch (DataAccessException e) {
+            return errorHandler(e, res);
+        }
+    }
+
     public Object errorHandler(Exception e, Response res) {
         ErrorResult errorResult = new ErrorResult(e.getMessage());
         if (Objects.equals(e.getMessage(), "Error: already taken")){
