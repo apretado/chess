@@ -28,27 +28,27 @@ import service.result.LoginResult;
 import service.result.RegisterResult;
 
 public class ServiceTest {
-    static final UserDAO userDAO = new MemoryUserDAO();
-    static final AuthDAO authDAO = new MemoryAuthDAO();
-    static final GameDAO gameDAO = new MemoryGameDAO();
-    static final ClearService clearService = new ClearService(userDAO, authDAO, gameDAO);
-    static final UserService userService = new UserService(userDAO, authDAO);
-    static final GameService gameService = new GameService(authDAO, gameDAO);
+    static final UserDAO USER_DAO = new MemoryUserDAO();
+    static final AuthDAO AUTH_DAO = new MemoryAuthDAO();
+    static final GameDAO GAME_DAO = new MemoryGameDAO();
+    static final ClearService CLEAR_SERVICE = new ClearService(USER_DAO, AUTH_DAO, GAME_DAO);
+    static final UserService USER_SERVICE = new UserService(USER_DAO, AUTH_DAO);
+    static final GameService GAME_SERVICE = new GameService(AUTH_DAO, GAME_DAO);
     
     @BeforeEach
     void reset() {
-        clearService.clear();
+        CLEAR_SERVICE.clear();
     }
 
     @Test
     void registerSuccess() throws DataAccessException {
         RegisterRequest registerRequest = new RegisterRequest("username", "password", "email");
-        RegisterResult result = userService.register(registerRequest);
+        RegisterResult result = USER_SERVICE.register(registerRequest);
         assertEquals("username", result.username());
         assertNotNull(result.authToken());
 
         registerRequest = new RegisterRequest("username2", "password2", "email2");
-        result = userService.register(registerRequest);
+        result = USER_SERVICE.register(registerRequest);
         assertEquals("username2", result.username());
         assertNotNull(result.authToken());
     }
@@ -57,61 +57,61 @@ public class ServiceTest {
     void registerFail() throws DataAccessException {
         RegisterRequest registerRequest = new RegisterRequest("username", "password", "email");
         // Initial registration
-        userService.register(registerRequest);
+        USER_SERVICE.register(registerRequest);
         // Repeat registration with same username
         DataAccessException exception = assertThrows(DataAccessException.class, () -> {
-            userService.register(registerRequest);
+            USER_SERVICE.register(registerRequest);
         });
         assertEquals("Error: already taken", exception.getMessage());
     }
 
     @Test
     void clear() throws DataAccessException {
-        userService.register(new RegisterRequest("username", "password", "email"));
-        userService.register(new RegisterRequest("username2", "password2", "email2"));
-        clearService.clear();
+        USER_SERVICE.register(new RegisterRequest("username", "password", "email"));
+        USER_SERVICE.register(new RegisterRequest("username2", "password2", "email2"));
+        CLEAR_SERVICE.clear();
 
         DataAccessException exception = assertThrows(DataAccessException.class, () -> {
-            userDAO.getUser("username");
+            USER_DAO.getUser("username");
         });
         assertEquals("Error: unauthorized", exception.getMessage());
 
         exception = assertThrows(DataAccessException.class, () -> {
-            userDAO.getUser("username2");
+            USER_DAO.getUser("username2");
         });
         assertEquals("Error: unauthorized", exception.getMessage());
     }
 
     @Test
     void loginSuccess() throws DataAccessException {
-        userService.register(new RegisterRequest("username", "password", "email"));
-        LoginResult loginResult = userService.login(new LoginRequest("username", "password"));
+        USER_SERVICE.register(new RegisterRequest("username", "password", "email"));
+        LoginResult loginResult = USER_SERVICE.login(new LoginRequest("username", "password"));
         assertEquals("username", loginResult.username());
         assertNotNull(loginResult.authToken());
     }
 
     @Test
     void loginFail() throws DataAccessException {
-        userService.register(new RegisterRequest("username", "password", "email"));
+        USER_SERVICE.register(new RegisterRequest("username", "password", "email"));
         // Wrong username
         DataAccessException exception = assertThrows(DataAccessException.class, () -> {
-            userService.login(new LoginRequest("username8", "password"));
+            USER_SERVICE.login(new LoginRequest("username8", "password"));
         });
         assertEquals("Error: unauthorized", exception.getMessage());
         
         // Wrong password
         exception = assertThrows(DataAccessException.class, () -> {
-            userService.login(new LoginRequest("username8", "password8"));
+            USER_SERVICE.login(new LoginRequest("username8", "password8"));
         });
         assertEquals("Error: unauthorized", exception.getMessage());
     }
 
     @Test
     void logoutSuccess() throws DataAccessException {
-        RegisterResult registerResult = userService.register(new RegisterRequest("username", "password", "email"));
-        userService.logout(registerResult.authToken());
+        RegisterResult registerResult = USER_SERVICE.register(new RegisterRequest("username", "password", "email"));
+        USER_SERVICE.logout(registerResult.authToken());
         DataAccessException exception = assertThrows(DataAccessException.class, () -> {
-            ServiceTest.authDAO.getAuth(registerResult.authToken());
+            ServiceTest.AUTH_DAO.getAuth(registerResult.authToken());
         });
         assertEquals("Error: unauthorized", exception.getMessage());
     }
@@ -119,10 +119,10 @@ public class ServiceTest {
     @Test
     void logoutFail() throws DataAccessException {
         // Register user
-        userService.register(new RegisterRequest("username", "password", "email"));
+        USER_SERVICE.register(new RegisterRequest("username", "password", "email"));
         // Try to log out with invalid auth token
         DataAccessException exception = assertThrows(DataAccessException.class, () -> {
-            userService.logout("invalidToken");
+            USER_SERVICE.logout("invalidToken");
         });
         assertEquals("Error: unauthorized", exception.getMessage());
     }
@@ -130,19 +130,19 @@ public class ServiceTest {
     @Test
     void createGameSuccess() throws DataAccessException {
         // Register user
-        String authToken = userService.register(new RegisterRequest("username", "password", "email")).authToken();
+        String authToken = USER_SERVICE.register(new RegisterRequest("username", "password", "email")).authToken();
         // Create game
-        CreateGameResult createGameResult = gameService.createGame(authToken, new CreateGameRequest("game name"));
+        CreateGameResult createGameResult = GAME_SERVICE.createGame(authToken, new CreateGameRequest("game name"));
         assertEquals(new CreateGameResult(1), createGameResult);
     }
 
     @Test
     void createGameFail() throws DataAccessException {
         // Register user
-        userService.register(new RegisterRequest("username", "password", "email")).authToken();
+        USER_SERVICE.register(new RegisterRequest("username", "password", "email")).authToken();
         // Try to create game with invalid auth token
         DataAccessException exception = assertThrows(DataAccessException.class, () -> {
-            gameService.createGame("invalidToken", new CreateGameRequest("game name"));
+            GAME_SERVICE.createGame("invalidToken", new CreateGameRequest("game name"));
         });
         assertEquals("Error: unauthorized", exception.getMessage());
     }
@@ -150,11 +150,11 @@ public class ServiceTest {
     @Test
     void listGamesSuccess() throws DataAccessException {
         // Register user
-        String authToken = userService.register(new RegisterRequest("username", "password", "email")).authToken();
+        String authToken = USER_SERVICE.register(new RegisterRequest("username", "password", "email")).authToken();
         // Create game
-        gameService.createGame(authToken, new CreateGameRequest("game name"));
+        GAME_SERVICE.createGame(authToken, new CreateGameRequest("game name"));
         // List games
-        ListGamesResult listGamesResult = gameService.listGames(authToken);
+        ListGamesResult listGamesResult = GAME_SERVICE.listGames(authToken);
         ListGamesResult expected = new ListGamesResult(Arrays.asList(new GameData(1, null, null, "game name", new ChessGame())));
         assertEquals(expected, listGamesResult);
     }
@@ -162,10 +162,10 @@ public class ServiceTest {
     @Test
     void listGamesFail() throws DataAccessException {
         // Register user
-        userService.register(new RegisterRequest("username", "password", "email")).authToken();
+        USER_SERVICE.register(new RegisterRequest("username", "password", "email")).authToken();
         // Try to list games with invalid auth token
         DataAccessException exception = assertThrows(DataAccessException.class, () -> {
-            gameService.listGames("invalidToken");
+            GAME_SERVICE.listGames("invalidToken");
         });
         assertEquals("Error: unauthorized", exception.getMessage());
     }
@@ -173,24 +173,24 @@ public class ServiceTest {
     @Test
     void joinGameSuccess() throws DataAccessException {
         // Register user
-        String authToken = userService.register(new RegisterRequest("username", "password", "email")).authToken();
+        String authToken = USER_SERVICE.register(new RegisterRequest("username", "password", "email")).authToken();
         // Create game
-        int gameID = gameService.createGame(authToken, new CreateGameRequest("game name")).gameID();
+        int gameID = GAME_SERVICE.createGame(authToken, new CreateGameRequest("game name")).gameID();
         // Join game
-        gameService.joinGame(authToken, new JoinGameRequest("WHITE", gameID));
-        assertEquals("username", gameDAO.getGame(1).whiteUsername());
+        GAME_SERVICE.joinGame(authToken, new JoinGameRequest("WHITE", gameID));
+        assertEquals("username", GAME_DAO.getGame(1).whiteUsername());
     }
 
     @Test
     void joinGameFail() throws DataAccessException {
         // Register user
-        String authToken = userService.register(new RegisterRequest("username", "password", "email")).authToken();
+        String authToken = USER_SERVICE.register(new RegisterRequest("username", "password", "email")).authToken();
         // Create game
-        gameService.createGame(authToken, new CreateGameRequest("game name"));
+        GAME_SERVICE.createGame(authToken, new CreateGameRequest("game name"));
 
         // Try to join with invalid auth token
         DataAccessException exception = assertThrows(DataAccessException.class, () -> {
-            gameService.joinGame("invalidToken", new JoinGameRequest("WHITE", 1));
+            GAME_SERVICE.joinGame("invalidToken", new JoinGameRequest("WHITE", 1));
         });
         assertEquals("Error: unauthorized", exception.getMessage());
     }
