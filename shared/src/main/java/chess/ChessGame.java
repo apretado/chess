@@ -27,6 +27,34 @@ public class ChessGame {
         return this.teamTurn;
     }
 
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((teamTurn == null) ? 0 : teamTurn.hashCode());
+        result = prime * result + ((board == null) ? 0 : board.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        ChessGame other = (ChessGame) obj;
+        if (teamTurn != other.teamTurn)
+            return false;
+        if (board == null) {
+            if (other.board != null)
+                return false;
+        } else if (!board.equals(other.board))
+            return false;
+        return true;
+    }
+
     /**
      * Set's which teams turn it is
      *

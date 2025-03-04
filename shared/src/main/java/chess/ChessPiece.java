@@ -1,6 +1,5 @@
 package chess;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Objects;
 
@@ -76,8 +75,6 @@ public class ChessPiece {
      * @return Collection of valid moves
      */
     public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
-        var pieceMoves = new ArrayList<ChessMove>();
-
         return switch (getPieceType()) {
             case PieceType.BISHOP -> PieceMovesCalculator.bishop(board, myPosition, this.getTeamColor());
             case PieceType.KING -> PieceMovesCalculator.king(board, myPosition, this.getTeamColor());

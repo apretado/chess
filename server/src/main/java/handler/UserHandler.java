@@ -1,7 +1,5 @@
 package handler;
 
-import java.util.Objects;
-
 import com.google.gson.Gson;
 
 import dataaccess.DataAccessException;
@@ -57,7 +55,7 @@ public class UserHandler {
     }
 
     public Object handleLogout(Request req, Response res) {
-        // Parse json
+        // Get authToken
         String authToken = req.headers("authorization");
         // Try to logout
         try {

@@ -4,9 +4,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import java.util.Arrays;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import chess.ChessGame;
 import dataaccess.AuthDAO;
 import dataaccess.DataAccessException;
 import dataaccess.GameDAO;
@@ -14,8 +17,13 @@ import dataaccess.MemoryAuthDAO;
 import dataaccess.MemoryGameDAO;
 import dataaccess.MemoryUserDAO;
 import dataaccess.UserDAO;
+import model.GameData;
+import service.request.CreateGameRequest;
+import service.request.JoinGameRequest;
 import service.request.LoginRequest;
 import service.request.RegisterRequest;
+import service.result.CreateGameResult;
+import service.result.ListGamesResult;
 import service.result.LoginResult;
 import service.result.RegisterResult;
 
@@ -25,6 +33,7 @@ public class ServiceTest {
     static final GameDAO gameDAO = new MemoryGameDAO();
     static final ClearService clearService = new ClearService(userDAO, authDAO, gameDAO);
     static final UserService userService = new UserService(userDAO, authDAO);
+    static final GameService gameService = new GameService(authDAO, gameDAO);
     
     @BeforeEach
     void reset() {
@@ -111,9 +120,77 @@ public class ServiceTest {
     void logoutFail() throws DataAccessException {
         // Register user
         userService.register(new RegisterRequest("username", "password", "email"));
-        // Try to log out with invalid token
+        // Try to log out with invalid auth token
         DataAccessException exception = assertThrows(DataAccessException.class, () -> {
             userService.logout("invalidToken");
+        });
+        assertEquals("Error: unauthorized", exception.getMessage());
+    }
+
+    @Test
+    void createGameSuccess() throws DataAccessException {
+        // Register user
+        String authToken = userService.register(new RegisterRequest("username", "password", "email")).authToken();
+        // Create game
+        CreateGameResult createGameResult = gameService.createGame(authToken, new CreateGameRequest("game name"));
+        assertEquals(new CreateGameResult(1), createGameResult);
+    }
+
+    @Test
+    void createGameFail() throws DataAccessException {
+        // Register user
+        userService.register(new RegisterRequest("username", "password", "email")).authToken();
+        // Try to create game with invalid auth token
+        DataAccessException exception = assertThrows(DataAccessException.class, () -> {
+            gameService.createGame("invalidToken", new CreateGameRequest("game name"));
+        });
+        assertEquals("Error: unauthorized", exception.getMessage());
+    }
+
+    @Test
+    void listGamesSuccess() throws DataAccessException {
+        // Register user
+        String authToken = userService.register(new RegisterRequest("username", "password", "email")).authToken();
+        // Create game
+        gameService.createGame(authToken, new CreateGameRequest("game name"));
+        // List games
+        ListGamesResult listGamesResult = gameService.listGames(authToken);
+        ListGamesResult expected = new ListGamesResult(Arrays.asList(new GameData(1, null, null, "game name", new ChessGame())));
+        assertEquals(expected, listGamesResult);
+    }
+
+    @Test
+    void listGamesFail() throws DataAccessException {
+        // Register user
+        userService.register(new RegisterRequest("username", "password", "email")).authToken();
+        // Try to list games with invalid auth token
+        DataAccessException exception = assertThrows(DataAccessException.class, () -> {
+            gameService.listGames("invalidToken");
+        });
+        assertEquals("Error: unauthorized", exception.getMessage());
+    }
+
+    @Test
+    void joinGameSuccess() throws DataAccessException {
+        // Register user
+        String authToken = userService.register(new RegisterRequest("username", "password", "email")).authToken();
+        // Create game
+        int gameID = gameService.createGame(authToken, new CreateGameRequest("game name")).gameID();
+        // Join game
+        gameService.joinGame(authToken, new JoinGameRequest("WHITE", gameID));
+        assertEquals("username", gameDAO.getGame(1).whiteUsername());
+    }
+
+    @Test
+    void joinGameFail() throws DataAccessException {
+        // Register user
+        String authToken = userService.register(new RegisterRequest("username", "password", "email")).authToken();
+        // Create game
+        gameService.createGame(authToken, new CreateGameRequest("game name"));
+
+        // Try to join with invalid auth token
+        DataAccessException exception = assertThrows(DataAccessException.class, () -> {
+            gameService.joinGame("invalidToken", new JoinGameRequest("WHITE", 1));
         });
         assertEquals("Error: unauthorized", exception.getMessage());
     }

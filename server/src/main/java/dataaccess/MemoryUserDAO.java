@@ -18,11 +18,11 @@ public class MemoryUserDAO implements UserDAO {
 
     @Override
     public UserData getUser(String username) throws DataAccessException {
-        UserData user = users.get(username);
-        if (user == null) {
+        UserData userData = users.get(username);
+        if (userData == null) {
             throw new DataAccessException("Error: unauthorized");
         }
-        return user;
+        return userData;
     }
 
     @Override
