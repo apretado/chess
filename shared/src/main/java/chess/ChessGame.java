@@ -52,10 +52,12 @@ public class ChessGame {
             return false;
         }
         if (board == null) {
-            if (other.board != null)
+            if (other.board != null) {
                 return false;
-        } else if (!board.equals(other.board))
+            }
+        } else if (!board.equals(other.board)) {
             return false;
+        }
         return true;
     }
 
