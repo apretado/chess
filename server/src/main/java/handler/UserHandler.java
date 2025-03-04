@@ -17,10 +17,12 @@ import spark.Response;
 public class UserHandler {
     private final UserService userService;
     private final Gson gson;
+    private final ErrorHandler errorHandler;
 
     public UserHandler(UserService userService, Gson gson) {
         this.userService = userService;
         this.gson = gson;
+        this.errorHandler = new ErrorHandler(gson);
     }
 
     public Object handleRegister(Request req, Response res) {
@@ -37,7 +39,7 @@ public class UserHandler {
             res.status(200);
             return gson.toJson(registerResult);
         } catch (DataAccessException e) {
-            return errorHandler(e, res);
+            return errorHandler.handleError(e, res);
         }
     }
 
@@ -50,7 +52,7 @@ public class UserHandler {
             res.status(200);
             return gson.toJson(loginResult);
         } catch (DataAccessException e) {
-            return errorHandler(e, res);
+            return errorHandler.handleError(e, res);
         }
     }
 
@@ -64,21 +66,7 @@ public class UserHandler {
             res.type("application/json");
             return "{}";
         } catch (DataAccessException e) {
-            return errorHandler(e, res);
+            return errorHandler.handleError(e, res);
         }
-    }
-
-    public Object errorHandler(Exception e, Response res) {
-        ErrorResult errorResult = new ErrorResult(e.getMessage());
-        if (Objects.equals(e.getMessage(), "Error: already taken")){
-            res.status(403);
-        } else if (Objects.equals(e.getMessage(), "Error: bad request")) {
-            res.status(400);
-        } else if (Objects.equals(e.getMessage(), "Error: unauthorized")) {
-            res.status(401);
-        } else {
-            res.status(500);
-        }
-        return gson.toJson(errorResult);
     }
 }
