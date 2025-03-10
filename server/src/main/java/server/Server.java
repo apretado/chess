@@ -10,6 +10,10 @@ import dataaccess.MemoryUserDAO;
 import dataaccess.MemoryAuthDAO;
 import dataaccess.MemoryGameDAO;
 
+import dataaccess.MySqlUserDAO;
+import dataaccess.MySqlAuthDAO;
+import dataaccess.MySqlGameDAO;
+
 import service.ClearService;
 import service.UserService;
 import service.GameService;
@@ -38,9 +42,9 @@ public class Server {
     public Server() {
         gson = new Gson();
 
-        userDAO = new MemoryUserDAO();
-        authDAO = new MemoryAuthDAO();
-        gameDAO = new MemoryGameDAO();
+        userDAO = new MySqlUserDAO();
+        authDAO = new MySqlAuthDAO();
+        gameDAO = new MySqlGameDAO();
 
         clearService = new ClearService(userDAO, authDAO, gameDAO);
         userService = new UserService(userDAO, authDAO);
