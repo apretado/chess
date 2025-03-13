@@ -3,6 +3,8 @@ package service;
 import java.util.Objects;
 import java.util.UUID;
 
+import org.mindrot.jbcrypt.BCrypt;
+
 import dataaccess.AuthDAO;
 import dataaccess.DataAccessException;
 import dataaccess.UserDAO;
@@ -23,9 +25,10 @@ public class UserService {
     }
 
     public RegisterResult register(RegisterRequest registerRequest) throws DataAccessException {
+        String hashedPassword = BCrypt.hashpw(registerRequest.password(), BCrypt.gensalt());
         // Create user
         userDAO.createUser(
-            new UserData(registerRequest.username(), registerRequest.password(), registerRequest.email())
+            new UserData(registerRequest.username(), hashedPassword, registerRequest.email())
         );
         // Create auth token
         String token = UUID.randomUUID().toString();
@@ -36,7 +39,7 @@ public class UserService {
     public LoginResult login(LoginRequest loginRequest) throws DataAccessException {
         // Check username and password
         UserData user = userDAO.getUser(loginRequest.username());
-        if (!Objects.equals(loginRequest.password(), user.password())) {
+        if (!BCrypt.checkpw(loginRequest.password(), user.password())) {
             throw new DataAccessException("Error: unauthorized");
         }
         // Create auth token
