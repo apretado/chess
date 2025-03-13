@@ -20,11 +20,14 @@ public class DataAccessTest {
     UserDAO userDAO;
     AuthDAO authDAO;
     GameDAO gameDAO;
+    UserData inputUser;
 
     DataAccessTest() throws DataAccessException {
         userDAO = new MySqlUserDAO();
         authDAO = new MySqlAuthDAO();
         gameDAO = new MySqlGameDAO();
+        inputUser = new UserData("username", "password", "email");
+
     }
 
     @BeforeEach
@@ -36,17 +39,12 @@ public class DataAccessTest {
 
     @Test
     void createUserSuccess() {
-        UserData inputUser = new UserData("username", "password", "email");
         // Add the user
         assertDoesNotThrow(() -> userDAO.createUser(inputUser));
-        // Query the user
-        UserData outputUser = assertDoesNotThrow(() -> userDAO.getUser("username"));
-        assertEquals(inputUser, outputUser);
     }
     
     @Test
     void createUserFail() throws DataAccessException {
-        UserData inputUser = new UserData("username", "password", "email");
         // Add the user
         assertDoesNotThrow(() -> userDAO.createUser(inputUser));
         // Try to add the user again
@@ -58,7 +56,6 @@ public class DataAccessTest {
 
     @Test
     void getUserSuccess() throws DataAccessException {
-        UserData inputUser = new UserData("username", "password", "email");
         // Add the user
         assertDoesNotThrow(() -> userDAO.createUser(inputUser));
         // Query the user
@@ -68,7 +65,6 @@ public class DataAccessTest {
 
     @Test
     void getUserFail() throws DataAccessException {
-        UserData inputUser = new UserData("username", "password", "email");
         // Add the user
         assertDoesNotThrow(() -> userDAO.createUser(inputUser));
         // Query non-existent user
