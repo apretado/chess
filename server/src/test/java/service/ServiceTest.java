@@ -36,7 +36,7 @@ public class ServiceTest {
     static final GameService GAME_SERVICE = new GameService(AUTH_DAO, GAME_DAO);
     
     @BeforeEach
-    void reset() {
+    void reset() throws DataAccessException {
         CLEAR_SERVICE.clear();
     }
 

@@ -1,60 +1,22 @@
 package dataaccess;
 
 import java.sql.SQLException;
-import java.sql.DriverManager;
-
-import com.google.gson.Gson;
 
 import model.UserData;
 
 public class MySqlUserDAO implements UserDAO {
 
-    public MySqlUserDAO() throws DataAccessException {
-        configureDatabase();
-    }
-
-    @Override
-    public void createUser(UserData userData) throws DataAccessException {
-        try (var conn = DatabaseManager.getConnection()) {
-            // Try to add user to database
-            try (var preparedStatement = conn.prepareStatement("INSERT INTO UserData (username, password, email) VALUES (?, ?, ?)")) {
-                preparedStatement.setString(1, userData.username());
-                preparedStatement.setString(2, userData.email());
-                preparedStatement.setString(3, userData.password());
-                preparedStatement.executeUpdate();
-            }
-        } catch (SQLException e) {
-            if (e.getErrorCode() == 1062) {
-                throw new DataAccessException("Error: already taken");
-            }
-            throw new DataAccessException("Database error: " + e.getMessage());
-        }
-    }
-
-    @Override
-    public UserData getUser(String username) throws DataAccessException {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getUser'");
-    }
-
-    @Override
-    public void clearUser() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'clearUser'");
-    }
-
     private final String[] createStatements = {
         """
-        CREATE TABLE IF NOT EXISTS UserData (
-            `username` varchar(256) NOT NULL,
+        CREATE TABLE IF NOT EXISTS users (
+            `username` varchar(256) NOT NULL PRIMARY KEY,
             `password` varchar(256) NOT NULL,
             `email` varchar(256) NOT NULL
-            PRIMARY KEY (`username`)
         )
         """
     };
 
-    private void configureDatabase() throws DataAccessException {
+    public MySqlUserDAO() throws DataAccessException {
         DatabaseManager.createDatabase();
         try (var conn = DatabaseManager.getConnection()) {
             for (String statement : createStatements) {
@@ -67,4 +29,52 @@ public class MySqlUserDAO implements UserDAO {
         }
     }
 
+    @Override
+    public void createUser(UserData userData) throws DataAccessException {
+        try (var conn = DatabaseManager.getConnection()) {
+            // Try to add user to database
+            try (var preparedStatement = conn.prepareStatement("INSERT INTO users (username, password, email) VALUES (?, ?, ?)")) {
+                preparedStatement.setString(1, userData.username());
+                preparedStatement.setString(2, userData.password());
+                preparedStatement.setString(3, userData.email());
+                preparedStatement.executeUpdate();
+            }
+        } catch (SQLException e) {
+            // Duplicate key error
+            if (e.getErrorCode() == 1062) {
+                throw new DataAccessException("Error: already taken");
+            }
+            // Other errors
+            throw new DataAccessException("Error creating user: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public UserData getUser(String username) throws DataAccessException {
+        try (var conn = DatabaseManager.getConnection()) {
+            try (var preparedStatement = conn.prepareStatement("SELECT username, password, email FROM users WHERE username = ?")) {
+                preparedStatement.setString(1, username);
+                try (var rs = preparedStatement.executeQuery()) {
+                    if (rs.next()) {
+                        return new UserData(rs.getString("username"), rs.getString("password"), rs.getString("email"));
+                    } else {
+                        throw new DataAccessException("Error: unauthorized");
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException("Error getting user: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public void clearUser() throws DataAccessException {
+        try (var conn = DatabaseManager.getConnection()) {
+            try (var preparedStatement = conn.prepareStatement("TRUNCATE TABLE users")) {
+                preparedStatement.executeUpdate();
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException("Error clearing users: " + e.getMessage());
+        }
+    }
 }

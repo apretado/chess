@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 
 import dataaccess.UserDAO;
 import dataaccess.AuthDAO;
+import dataaccess.DataAccessException;
 import dataaccess.GameDAO;
 
 import dataaccess.MemoryUserDAO;
@@ -41,10 +42,14 @@ public class Server {
 
     public Server() {
         gson = new Gson();
-
-        userDAO = new MySqlUserDAO();
-        authDAO = new MySqlAuthDAO();
-        gameDAO = new MySqlGameDAO();
+        
+        try {
+            userDAO = new MySqlUserDAO();
+            authDAO = new MySqlAuthDAO();
+            gameDAO = new MySqlGameDAO();
+        } catch (DataAccessException e) {
+            throw new RuntimeException("Failed to initialize DAOs: " + e.getMessage());
+        }
 
         clearService = new ClearService(userDAO, authDAO, gameDAO);
         userService = new UserService(userDAO, authDAO);
