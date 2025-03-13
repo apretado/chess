@@ -3,6 +3,7 @@ package dataaccess;
 import java.sql.SQLException;
 
 import model.AuthData;
+import model.UserData;
 
 public class MySqlAuthDAO implements AuthDAO {
 
@@ -29,21 +30,50 @@ public class MySqlAuthDAO implements AuthDAO {
     }
 
     @Override
-    public void createAuth(AuthData auth) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'createAuth'");
+    public void createAuth(AuthData auth) throws DataAccessException {
+        try (var conn = DatabaseManager.getConnection()) {
+            // Try to add user to database
+            try (var preparedStatement = conn.prepareStatement("INSERT INTO auth (auth_token, username) VALUES (?, ?)")) {
+                preparedStatement.setString(1, auth.authToken());
+                preparedStatement.setString(2, auth.username());
+                preparedStatement.executeUpdate();
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException("Error creating auth: " + e.getMessage());
+        }
     }
 
     @Override
     public AuthData getAuth(String authToken) throws DataAccessException {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getAuth'");
+        try (var conn = DatabaseManager.getConnection()) {
+            try (var preparedStatement = conn.prepareStatement("SELECT auth_token, username FROM auth WHERE auth_token = ?")) {
+                preparedStatement.setString(1, authToken);
+                try (var rs = preparedStatement.executeQuery()) {
+                    if (rs.next()) {
+                        return new AuthData(rs.getString("auth_token"), rs.getString("username"));
+                    } else {
+                        throw new DataAccessException("Error: unauthorized");
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException("Error getting auth: " + e.getMessage());
+        }
     }
 
     @Override
     public void deleteAuth(String authToken) throws DataAccessException {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'deleteAuth'");
+        try (var conn = DatabaseManager.getConnection()) {
+            try (var preparedStatement = conn.prepareStatement("DELETE FROM auth WHERE auth_token = ?")) {
+                preparedStatement.setString(1, authToken);
+                int rowsAffected = preparedStatement.executeUpdate();
+                if (rowsAffected == 0) {
+                    throw new DataAccessException("Error: unauthorized");
+                }
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException("Error getting user: " + e.getMessage());
+        }
     }
 
     @Override

@@ -14,8 +14,8 @@ public class MySqlGameDAO implements GameDAO {
             `white_username` varchar(256) DEFAULT NULL,
             `black_username` varchar(256) DEFAULT NULL,
             `game_name` varchar(256) NOT NULL,
-            `game` TEXT NOT NULL
-            PRIMARY KEY (`id`)
+            `game_state` TEXT NOT NULL,
+            PRIMARY KEY (`game_id`)
         )  
         """
     };
