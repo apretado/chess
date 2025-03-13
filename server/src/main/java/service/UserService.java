@@ -1,6 +1,5 @@
 package service;
 
-import java.util.Objects;
 import java.util.UUID;
 
 import org.mindrot.jbcrypt.BCrypt;

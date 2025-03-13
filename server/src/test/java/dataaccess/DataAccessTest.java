@@ -111,7 +111,7 @@ public class DataAccessTest {
         assertDoesNotThrow(() -> authDAO.createAuth(authData));
 
         // Try to add it again
-        DataAccessException exception = assertThrows(DataAccessException.class, () -> {
+        assertThrows(DataAccessException.class, () -> {
             authDAO.createAuth(authData);
         });
     }
