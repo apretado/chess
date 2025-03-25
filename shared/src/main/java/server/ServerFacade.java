@@ -15,6 +15,7 @@ import service.request.CreateGameRequest;
 import service.request.JoinGameRequest;
 import service.request.LoginRequest;
 import service.request.RegisterRequest;
+import service.result.CreateGameResult;
 import service.result.ListGamesResult;
 import service.result.LoginResult;
 import service.result.RegisterResult;
@@ -43,7 +44,7 @@ public class ServerFacade {
         throw new UnsupportedOperationException("Unimplemented method");
     }
 
-    public void createGame(CreateGameRequest createGameRequest) {
+    public CreateGameResult createGame(CreateGameRequest createGameRequest) {
         // TODO implement method
         throw new UnsupportedOperationException("Unimplemented method");
     }
