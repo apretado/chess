@@ -1,5 +1,6 @@
 package client;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.*;
@@ -32,6 +33,7 @@ public class ServerFacadeTests {
     void register() throws Exception {
         AuthData authData = facade.register("player1", "password", "p1@email.com");
         assertTrue(authData.authToken().length() > 10);
+        assertEquals("player1", authData.username());
     }
 
 }
