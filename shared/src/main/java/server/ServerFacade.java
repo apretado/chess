@@ -18,12 +18,10 @@ import model.GameData;
 
 public class ServerFacade {
     private final String serverUrl;
-    private final int port;
     private String authToken;
 
-    public ServerFacade(String serverUrl, int port) {
+    public ServerFacade(String serverUrl) {
         this.serverUrl = serverUrl;
-        this.port = port;
         this.authToken = null;
     }
 
