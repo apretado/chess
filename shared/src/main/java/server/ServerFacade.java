@@ -7,14 +7,17 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
-import java.util.List;
 
 import com.google.gson.Gson;
 
 import exception.ResponseException;
-import model.AuthData;
-import model.GameData;
-
+import service.request.CreateGameRequest;
+import service.request.JoinGameRequest;
+import service.request.LoginRequest;
+import service.request.RegisterRequest;
+import service.result.ListGamesResult;
+import service.result.LoginResult;
+import service.result.RegisterResult;
 
 public class ServerFacade {
     private final String serverUrl;
@@ -25,14 +28,15 @@ public class ServerFacade {
         this.authToken = null;
     }
 
-    public AuthData login(String username, String password) {
+    public LoginResult login(LoginRequest loginRequest) {
         // TODO implement method
         throw new UnsupportedOperationException("Unimplemented method");
     }
 
-    public AuthData register(String username, String password, String email) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'register'");
+    public RegisterResult register(RegisterRequest registerRequest) throws ResponseException {
+        // TODO implement method
+        String path = "/user";
+        return makeRequest("POST", path, path, null);
     }
 
     public void logout() {
@@ -40,17 +44,17 @@ public class ServerFacade {
         throw new UnsupportedOperationException("Unimplemented method");
     }
 
-    public void createGame(String gameName) {
+    public void createGame(CreateGameRequest createGameRequest) {
         // TODO implement method
         throw new UnsupportedOperationException("Unimplemented method");
     }
 
-    public List<GameData> listGames() {
+    public ListGamesResult listGames() {
         // TODO implement method
         throw new UnsupportedOperationException("Unimplemented method");
     }
 
-    public void joinGame(String playerColor, int gameID) {
+    public void joinGame(JoinGameRequest joinGameRequest) {
         // TODO implement method
         throw new UnsupportedOperationException("Unimplemented method");
     }
