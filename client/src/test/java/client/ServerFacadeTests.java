@@ -6,6 +6,7 @@ import org.junit.jupiter.api.*;
 
 import model.AuthData;
 import server.Server;
+import server.ServerFacade;
 
 
 public class ServerFacadeTests {
@@ -26,12 +27,7 @@ public class ServerFacadeTests {
         server.stop();
     }
 
-
     @Test
-    public void sampleTest() {
-        Assertions.assertTrue(true);
-    }
-
     void register() throws Exception {
         AuthData authData = facade.register("player1", "password", "p1@email.com");
         assertTrue(authData.authToken().length() > 10);
