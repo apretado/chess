@@ -1,13 +1,16 @@
 package client;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.*;
 
-import model.AuthData;
+import exception.ResponseException;
 import server.Server;
 import server.ServerFacade;
+import service.request.RegisterRequest;
+import service.result.RegisterResult;
 
 
 public class ServerFacadeTests {
@@ -29,11 +32,18 @@ public class ServerFacadeTests {
         server.stop();
     }
 
+    @BeforeEach
+    void clear() throws ResponseException {
+        assertDoesNotThrow(() -> facade.clear());
+    }
+
     @Test
     void register() throws Exception {
-        AuthData authData = facade.register("player1", "password", "p1@email.com");
-        assertTrue(authData.authToken().length() > 10);
-        assertEquals("player1", authData.username());
+        RegisterResult registerResult = facade.register(
+            new RegisterRequest("username", "password", "email")
+        );
+        assertTrue(registerResult.authToken().length() > 10);
+        assertEquals("username", registerResult.username());
     }
 
 }

@@ -34,9 +34,8 @@ public class ServerFacade {
     }
 
     public RegisterResult register(RegisterRequest registerRequest) throws ResponseException {
-        // TODO implement method
         String path = "/user";
-        return makeRequest("POST", path, path, null);
+        return makeRequest("POST", path, registerRequest, RegisterResult.class);
     }
 
     public void logout() {
@@ -57,6 +56,10 @@ public class ServerFacade {
     public void joinGame(JoinGameRequest joinGameRequest) {
         // TODO implement method
         throw new UnsupportedOperationException("Unimplemented method");
+    }
+
+    public void clear() throws ResponseException {
+        makeRequest("DELETE", "/db", null, null);
     }
 
     private <T> T makeRequest(String method, String path, Object request, Class<T> responseClass) throws ResponseException {
