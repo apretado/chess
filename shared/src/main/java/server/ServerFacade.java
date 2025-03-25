@@ -29,34 +29,32 @@ public class ServerFacade {
         this.authToken = null;
     }
 
-    public LoginResult login(LoginRequest loginRequest) {
-        // TODO implement method
-        throw new UnsupportedOperationException("Unimplemented method");
+    public LoginResult login(LoginRequest loginRequest) throws ResponseException {
+        LoginResult loginResult = makeRequest("POST", "/session", loginRequest, LoginResult.class);
+        authToken = loginResult.authToken();
+        return loginResult;
     }
 
     public RegisterResult register(RegisterRequest registerRequest) throws ResponseException {
-        String path = "/user";
-        return makeRequest("POST", path, registerRequest, RegisterResult.class);
+        RegisterResult registerResult = makeRequest("POST", "/user", registerRequest, RegisterResult.class);
+        authToken = registerResult.authToken();
+        return registerResult;
     }
 
-    public void logout() {
-        // TODO implement method
-        throw new UnsupportedOperationException("Unimplemented method");
+    public void logout() throws ResponseException {
+        makeRequest("DELETE", "/session", null, null);
     }
 
-    public CreateGameResult createGame(CreateGameRequest createGameRequest) {
-        // TODO implement method
-        throw new UnsupportedOperationException("Unimplemented method");
+    public CreateGameResult createGame(CreateGameRequest createGameRequest) throws ResponseException {
+        return makeRequest("POST", "/game", createGameRequest, CreateGameResult.class);
     }
 
-    public ListGamesResult listGames() {
-        // TODO implement method
-        throw new UnsupportedOperationException("Unimplemented method");
+    public ListGamesResult listGames() throws ResponseException {
+        return makeRequest("GET", "/game", null, ListGamesResult.class);
     }
 
-    public void joinGame(JoinGameRequest joinGameRequest) {
-        // TODO implement method
-        throw new UnsupportedOperationException("Unimplemented method");
+    public void joinGame(JoinGameRequest joinGameRequest) throws ResponseException {
+        makeRequest("PUT", "/game", joinGameRequest, null);
     }
 
     public void clear() throws ResponseException {
@@ -69,6 +67,9 @@ public class ServerFacade {
             HttpURLConnection http = (HttpURLConnection) url.openConnection();
             http.setRequestMethod(method);
             http.setDoOutput(true);
+
+            // Add auth token
+            http.addRequestProperty("authorization", authToken);
 
             writeBody(request, http);
             http.connect();
