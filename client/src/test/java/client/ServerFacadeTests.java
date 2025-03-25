@@ -89,11 +89,11 @@ public class ServerFacadeTests {
 
     @Test
     void logoutSuccess() throws ResponseException {
-        RegisterResult registerResult = facade.register(new RegisterRequest("username", "password", "email"));
+        facade.register(new RegisterRequest("username", "password", "email"));
         facade.logout();
-        // Try to list games with expired auth token
-        ResponseException exception = assertThrows(ResponseException.class, () -> {
-            facade.listGames();
+        // Try to log out with expired auth token
+        assertThrows(ResponseException.class, () -> {
+            facade.logout();
         });
     }
 
