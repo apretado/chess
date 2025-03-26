@@ -2,13 +2,21 @@ package client;
 
 import java.util.Scanner;
 
+import server.ServerFacade;
+
 import static ui.EscapeSequences.*;
 
 public class Repl {
-    private final Client client;
+    private final PreloginClient preloginClient;
+    private final PostloginClient postloginClient;
+    private Client client;
+    private State state = State.LOGGED_OUT;
 
     public Repl(String serverUrl) {
-        client = new PreloginClient(serverUrl);
+        ServerFacade server = new ServerFacade(serverUrl);
+        preloginClient = new PreloginClient(server, this);
+        postloginClient = new PostloginClient(server, this);
+        client = preloginClient;
     }
 
     public void run()  {
@@ -18,7 +26,7 @@ public class Repl {
         try (Scanner scanner = new Scanner(System.in)) {
             String result = "";
             while (!result.equals("quit")) {
-                System.out.print("\n>>>> ");
+                System.out.printf("\n[%s]>>>> ", state);
                 String line = scanner.nextLine();
 
                 try {
@@ -30,5 +38,13 @@ public class Repl {
             }
         }
         System.out.println();
+    }
+
+    public void setState(State newState) {
+        this.state = newState;
+        switch(state) {
+            case LOGGED_OUT: client = preloginClient; break;
+            case LOGGED_IN: client = postloginClient; break;
+        }
     }
 }

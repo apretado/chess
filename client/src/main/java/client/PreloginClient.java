@@ -9,31 +9,31 @@ import service.request.RegisterRequest;
 
 public class PreloginClient implements Client {
     private final ServerFacade server;
-    private final String serverUrl;
-    private State state = State.LOGGED_OUT;
-    private String username = null;
+    private Repl repl;
 
-    public PreloginClient(String serverUrl) {
-        server = new ServerFacade(serverUrl);
-        this.serverUrl = serverUrl;
+    public PreloginClient(ServerFacade server, Repl repl) {
+        this.server = server;
+        this.repl = repl;
     }
 
     public String eval(String input) {
-        // try {
+        try {
             String[] tokens = input.toLowerCase().split(" ");
             // First token
             String command = (tokens.length > 0) ? tokens[0] : "help";
             // Rest of the tokens
             String[] params = Arrays.copyOfRange(tokens, 1, tokens.length);
             return switch (command) {
-                case "quit" -> "quit";
                 case "help" -> help();
+                case "quit" -> "quit";
+                case "login" -> login(params);
+                case "register" -> register(params);
                 default -> help();
             };
-        // } catch (ResponseException e) {
-        //     // TODO: handle exceptions
-        //     return e.getMessage();
-        // }
+        } catch (ResponseException e) {
+            // TODO: handle exceptions
+            return e.getMessage();
+        }
     }
 
     public String help() {
@@ -43,5 +43,23 @@ public class PreloginClient implements Client {
                 quit - playing chess
                 help - with possible commands
                 """;
+    }
+
+    public String register(String... params) throws ResponseException {
+        if (params.length >= 3) {
+            server.register(new RegisterRequest(params[0], params[1], params[2]));
+            repl.setState(State.LOGGED_IN);
+            return String.format("You registered as %s.", params[0]); 
+        }
+        throw new ResponseException(400, "Expected: <USERNAME> <PASSWORD> <EMAIL>");
+    }
+
+    public String login(String... params) throws ResponseException {
+        if (params.length >= 2) {
+            server.login(new LoginRequest(params[0], params[1]));
+            repl.setState(State.LOGGED_IN);
+            return String.format("You logged in as %s.", params[0]);
+        }
+        throw new ResponseException(400, "Expected: <USERNAME> <PASSWORD>");
     }
 }
