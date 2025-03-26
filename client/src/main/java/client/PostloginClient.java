@@ -16,7 +16,6 @@ public class PostloginClient extends PregameClient {
 
     public PostloginClient(ServerFacade server, Repl repl) {
         super(server, repl);
-        this.gameNumberToData = new HashMap<>();
     }
 
     @Override
@@ -71,6 +70,10 @@ public class PostloginClient extends PregameClient {
     public String list() throws ResponseException {
         try {
             ListGamesResult listGamesResult = server.listGames();
+            if (listGamesResult.games().isEmpty()) {
+                gameNumberToData = new HashMap<>();
+                return "No active games.";
+            }
             gameNumberToData = new HashMap<>();
             int number = 1;
             StringBuilder output = new StringBuilder();
@@ -93,7 +96,7 @@ public class PostloginClient extends PregameClient {
     }
 
     public String join(String... params) throws ResponseException {
-        if (gameNumberToData.isEmpty()) {
+        if (gameNumberToData == null) {
             throw new ResponseException(403, "You must call 'list' before calling 'observe' or 'join.'");
         }
         if (params.length >= 2) {
@@ -104,6 +107,8 @@ public class PostloginClient extends PregameClient {
                 return BoardProcesser.makeString(chessBoard, color);
             } catch (IllegalArgumentException e) {
                 throw new ResponseException(400, "Expected: <ID> [WHITE|BLACK]");
+            } catch (NullPointerException e) {
+                throw new ResponseException(400, "No game has been assigned this ID. Type 'list' to get game IDs");
             }
         }
         throw new ResponseException(400, "Expected: <ID> [WHITE|BLACK]");
