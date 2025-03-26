@@ -1,37 +1,24 @@
 package client;
 
-import java.util.Arrays;
-
 import exception.ResponseException;
 import server.ServerFacade;
 
-public class PostloginClient implements Client {
-    private final ServerFacade server;
-    private Repl repl;
+public class PostloginClient extends PregameClient {
 
     public PostloginClient(ServerFacade server, Repl repl) {
-        this.server = server;
-        this.repl = repl;
+        super(server, repl);
     }
 
-    public String eval(String input) {
-        try {
-            String[] tokens = input.toLowerCase().split(" ");
-            // First token
-            String command = (tokens.length > 0) ? tokens[0] : "help";
-            // Rest of the tokens
-            String[] params = Arrays.copyOfRange(tokens, 1, tokens.length);
-            return switch (command) {
-                case "help" -> help();
-                case "logout" -> logout();
-                default -> help();
-            };
-        } catch (ResponseException e) {
-            // TODO: handle exceptions
-            return e.getMessage();
-        }
+    @Override
+    protected String handleCommand(String command, String[] params) throws ResponseException {
+        return switch (command) {
+            case "help" -> help();
+            case "logout" -> logout();
+            default -> help();
+        };
     }
 
+    @Override
     public String help() {
         return """
                 create <NAME> - a game
@@ -49,5 +36,4 @@ public class PostloginClient implements Client {
         repl.setState(State.LOGGED_OUT);
         return "You successfully logged out.";
     }
-
 }

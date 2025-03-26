@@ -1,41 +1,27 @@
 package client;
 
-import java.util.Arrays;
-
 import exception.ResponseException;
 import server.ServerFacade;
 import service.request.LoginRequest;
 import service.request.RegisterRequest;
 
-public class PreloginClient implements Client {
-    private final ServerFacade server;
-    private Repl repl;
-
+public class PreloginClient extends PregameClient {
     public PreloginClient(ServerFacade server, Repl repl) {
-        this.server = server;
-        this.repl = repl;
+        super(server, repl);
     }
 
-    public String eval(String input) {
-        try {
-            String[] tokens = input.toLowerCase().split(" ");
-            // First token
-            String command = (tokens.length > 0) ? tokens[0] : "help";
-            // Rest of the tokens
-            String[] params = Arrays.copyOfRange(tokens, 1, tokens.length);
-            return switch (command) {
-                case "help" -> help();
-                case "quit" -> "quit";
-                case "login" -> login(params);
-                case "register" -> register(params);
-                default -> help();
-            };
-        } catch (ResponseException e) {
-            // TODO: handle exceptions
-            return e.getMessage();
-        }
+    @Override
+    protected String handleCommand(String command, String[] params) throws ResponseException {
+        return switch (command) {
+            case "help" -> help();
+            case "quit" -> "quit";
+            case "login" -> login(params);
+            case "register" -> register(params);
+            default -> help();
+        };
     }
 
+    @Override
     public String help() {
         return """
                 register <USERNAME> <PASSWORD> <EMAIL> - to create an account
@@ -62,4 +48,6 @@ public class PreloginClient implements Client {
         }
         throw new ResponseException(400, "Expected: <USERNAME> <PASSWORD>");
     }
+
+
 }
