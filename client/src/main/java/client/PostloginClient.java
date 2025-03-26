@@ -26,7 +26,7 @@ public class PostloginClient extends PregameClient {
             case "logout" -> logout();
             case "create" -> create(params);
             case "list" -> list();
-            // case "join" -> join(params);
+            case "join" -> join(params);
             case "observe" -> observe(params);
             case "quit" -> "quit";
             default -> help();
@@ -75,12 +75,25 @@ public class PostloginClient extends PregameClient {
 
     public String observe(String... params) throws ResponseException {
         if (params.length >= 1) {
-            if (gameNumberToData.isEmpty()) {
-                throw new ResponseException(403, "You must call 'list' before calling 'observe.'");
-            }
-            ChessBoard chessBoard = gameNumberToData.get(Integer.parseInt(params[0])).game().getBoard();
-            return BoardProcesser.makeString(chessBoard, TeamColor.WHITE);
+            return join(new String[]{params[0], "WHITE"});
         }
         throw new ResponseException(400, "Expected: <ID>");
+    }
+
+    public String join(String... params) throws ResponseException {
+        if (gameNumberToData.isEmpty()) {
+            throw new ResponseException(403, "You must call 'list' before calling 'observe' or 'join.'");
+        }
+        if (params.length >= 2) {
+            try {
+                TeamColor color = TeamColor.valueOf(params[1].toUpperCase());
+                int gameNumber = Integer.parseInt(params[0]);
+                ChessBoard chessBoard = gameNumberToData.get(gameNumber).game().getBoard();
+                return BoardProcesser.makeString(chessBoard, color);
+            } catch (IllegalArgumentException e) {
+                throw new ResponseException(400, "Expected: <ID> [WHITE|BLACK]");
+            }
+        }
+        throw new ResponseException(400, "Expected: <ID> [WHITE|BLACK]");
     }
 }
