@@ -33,7 +33,11 @@ public class PreloginClient extends PregameClient {
 
     public String register(String... params) throws ResponseException {
         if (params.length >= 3) {
-            server.register(new RegisterRequest(params[0], params[1], params[2]));
+            try {
+                server.register(new RegisterRequest(params[0], params[1], params[2]));
+            } catch (ResponseException e) {
+                throw new ResponseException(403, "Error: username already taken");
+            }
             repl.setState(State.LOGGED_IN);
             return String.format("You registered as %s.", params[0]); 
         }
@@ -42,7 +46,11 @@ public class PreloginClient extends PregameClient {
 
     public String login(String... params) throws ResponseException {
         if (params.length >= 2) {
-            server.login(new LoginRequest(params[0], params[1]));
+            try {
+                server.login(new LoginRequest(params[0], params[1]));
+            } catch (ResponseException e) {
+                throw new ResponseException(401, "Error: incorrect username or password");
+            }
             repl.setState(State.LOGGED_IN);
             return String.format("You logged in as %s.", params[0]);
         }
