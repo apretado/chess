@@ -47,30 +47,42 @@ public class PostloginClient extends PregameClient {
     }
 
     public String logout() throws ResponseException {
-        server.logout();
+        try {
+            server.logout();
+        } catch (ResponseException e) {
+            throw new ResponseException(403, "Error: unable to logout");
+        }
         repl.setState(State.LOGGED_OUT);
         return "You successfully logged out.";
     }
 
     public String create(String... params) throws ResponseException {
         if (params.length >= 1) {
-            server.createGame(new CreateGameRequest(params[0]));
+            try {
+                server.createGame(new CreateGameRequest(params[0]));
+            } catch (ResponseException e) {
+                throw new ResponseException(403, "Error: unable to create game");
+            }
             return String.format("Successfully created game '%s'", params[0]);
         }
         throw new ResponseException(400, "Expected: <NAME>");
     }
 
     public String list() throws ResponseException {
-        ListGamesResult listGamesResult = server.listGames();
-        gameNumberToData = new HashMap<>();
-        int number = 1;
-        StringBuilder output = new StringBuilder();
-        for (GameData gameData : listGamesResult.games()) {
-            gameNumberToData.put(number, gameData);
-            output.append(String.format("%d: %s\n", number, gameData.gameName()));
-            number++;
+        try {
+            ListGamesResult listGamesResult = server.listGames();
+            gameNumberToData = new HashMap<>();
+            int number = 1;
+            StringBuilder output = new StringBuilder();
+            for (GameData gameData : listGamesResult.games()) {
+                gameNumberToData.put(number, gameData);
+                output.append(String.format("%d: %s\n", number, gameData.gameName()));
+                number++;
+            }
+            return output.toString();
+        } catch (ResponseException e) {
+            throw new ResponseException(403, "Error: unable to list games");
         }
-        return output.toString();
     }
 
     public String observe(String... params) throws ResponseException {
