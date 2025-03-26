@@ -39,26 +39,24 @@ public class BoardProcesser {
                 if (row == 0 || row == ChessBoard.getBoardSize() + 1) {
                     // Column letter
                     output.append(String.format(" %s%s%c ", SET_BG_COLOR_DARK_GREY, SET_TEXT_COLOR_BLACK, (char)(col + 96)));
-                } else {
-                    // Background color
-                    output.append((row - col) % 2 == 0 ? SET_BG_COLOR_BLACK : SET_BG_COLOR_WHITE);
-                    output.append(" ");
-                    // Chess piece
-                    ChessPiece chessPiece = chessBoard.getPiece(new ChessPosition(row, col));
-                    if (chessPiece == null) {
-                        output.append(" ");
-                    } else {
-                        output.append(chessPiece.getTeamColor() == TeamColor.WHITE ? SET_TEXT_COLOR_RED : SET_TEXT_COLOR_BLUE);
-                        switch(chessPiece.getPieceType()) {
-                            case BISHOP: output.append("B"); break;
-                            case KING: output.append("K"); break;
-                            case KNIGHT: output.append("N"); break;
-                            case PAWN: output.append("P"); break;
-                            case QUEEN: output.append("Q"); break;
-                            case ROOK: output.append("R"); break;                  
-                        }
-                    }
-                    output.append(" ");
+                    continue;
+                }
+                // Background color
+                output.append((row - col) % 2 == 0 ? SET_BG_COLOR_BLACK : SET_BG_COLOR_WHITE);
+                // Chess piece
+                ChessPiece chessPiece = chessBoard.getPiece(new ChessPosition(row, col));
+                if (chessPiece == null) {
+                    output.append("   ");
+                    continue;
+                }
+                output.append(chessPiece.getTeamColor() == TeamColor.WHITE ? SET_TEXT_COLOR_RED : SET_TEXT_COLOR_BLUE);
+                switch(chessPiece.getPieceType()) {
+                    case BISHOP: output.append(" B "); break;
+                    case KING: output.append(" K "); break;
+                    case KNIGHT: output.append(" N "); break;
+                    case PAWN: output.append(" P "); break;
+                    case QUEEN: output.append(" Q "); break;
+                    case ROOK: output.append(" R "); break;                  
                 }
             }
             // Row number

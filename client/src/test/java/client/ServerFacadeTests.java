@@ -66,10 +66,10 @@ public class ServerFacadeTests {
 
     @Test
     void loginSuccess() throws ResponseException {
-        facade.register(new RegisterRequest("username", "password", "email"));
-        LoginResult loginResult = facade.login(new LoginRequest("username", "password"));
-        assertEquals("username", loginResult.username());
-        assertNotNull(loginResult.authToken());
+        facade.register(new RegisterRequest("myname", "mypass", "mymail"));
+        LoginResult loginResult = facade.login(new LoginRequest("myname", "mypass"));
+        assertEquals("myname", loginResult.username());
+        assertTrue(loginResult.authToken().length() > 10);
     }
 
     @Test

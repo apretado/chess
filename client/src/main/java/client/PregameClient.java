@@ -24,7 +24,6 @@ public abstract class PregameClient implements Client {
             String[] params = Arrays.copyOfRange(tokens, 1, tokens.length);
             return handleCommand(command, params);
         } catch (ResponseException e) {
-            // TODO: handle exceptions
             return e.getMessage();
         }
     }
