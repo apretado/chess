@@ -9,6 +9,7 @@ import exception.ResponseException;
 import model.GameData;
 import server.ServerFacade;
 import service.request.CreateGameRequest;
+import service.request.JoinGameRequest;
 import service.result.ListGamesResult;
 
 public class PostloginClient extends PregameClient {
@@ -104,11 +105,14 @@ public class PostloginClient extends PregameClient {
                 TeamColor color = TeamColor.valueOf(params[1].toUpperCase());
                 int gameNumber = Integer.parseInt(params[0]);
                 ChessBoard chessBoard = gameNumberToData.get(gameNumber).game().getBoard();
+                server.joinGame(new JoinGameRequest(color.toString(), gameNumber));
                 return BoardProcesser.makeString(chessBoard, color);
             } catch (IllegalArgumentException e) {
                 throw new ResponseException(400, "Expected: <ID> [WHITE|BLACK]");
             } catch (NullPointerException e) {
                 throw new ResponseException(400, "No game has been assigned this ID. Type 'list' to get game IDs");
+            } catch (ResponseException e) {
+                throw new ResponseException(409, "Could not join game: color already taken");
             }
         }
         throw new ResponseException(400, "Expected: <ID> [WHITE|BLACK]");
