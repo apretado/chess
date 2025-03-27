@@ -80,7 +80,10 @@ public class PostloginClient extends PregameClient {
             StringBuilder output = new StringBuilder();
             for (GameData gameData : listGamesResult.games()) {
                 gameNumberToData.put(number, gameData);
-                output.append(String.format("%d: %s\n", number, gameData.gameName()));
+                String whiteName = (gameData.whiteUsername() != null) ? gameData.whiteUsername() : "[Available]";
+                String blackName = (gameData.blackUsername() != null) ? gameData.blackUsername() : "[Available]";
+                output.append(String.format("%d | %s | Black: %s | White: %s\n", number, gameData.gameName(), whiteName, blackName));
+
                 number++;
             }
             return output.toString();
