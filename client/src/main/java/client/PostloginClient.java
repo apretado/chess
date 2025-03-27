@@ -82,7 +82,7 @@ public class PostloginClient extends PregameClient {
                 gameNumberToData.put(number, gameData);
                 String whiteName = (gameData.whiteUsername() != null) ? gameData.whiteUsername() : "[Available]";
                 String blackName = (gameData.blackUsername() != null) ? gameData.blackUsername() : "[Available]";
-                output.append(String.format("%d | %s | Black: %s | White: %s\n", number, gameData.gameName(), whiteName, blackName));
+                output.append(String.format("%d | %s | White: %s | Black: %s\n", number, gameData.gameName(), whiteName, blackName));
 
                 number++;
             }
@@ -93,31 +93,46 @@ public class PostloginClient extends PregameClient {
     }
 
     public String observe(String... params) throws ResponseException {
+        if (gameNumberToData == null) {
+            throw new ResponseException(403, "You must call 'list' before calling 'observe.'");
+        }
         if (params.length >= 1) {
-            return join(new String[]{params[0], "WHITE"});
+            try {
+                int gameNumber = Integer.parseInt(params[0]);
+                ChessBoard chessBoard = getBoard(gameNumber);
+                return BoardProcesser.makeString(chessBoard, TeamColor.WHITE);
+            } catch (IllegalArgumentException e) {
+                throw new ResponseException(400, "Expected: <ID>");
+            }
         }
         throw new ResponseException(400, "Expected: <ID>");
     }
 
     public String join(String... params) throws ResponseException {
         if (gameNumberToData == null) {
-            throw new ResponseException(403, "You must call 'list' before calling 'observe' or 'join.'");
+            throw new ResponseException(403, "You must call 'list' before calling 'join.'");
         }
         if (params.length >= 2) {
             try {
                 TeamColor color = TeamColor.valueOf(params[1].toUpperCase());
                 int gameNumber = Integer.parseInt(params[0]);
-                ChessBoard chessBoard = gameNumberToData.get(gameNumber).game().getBoard();
+                ChessBoard chessBoard = getBoard(gameNumber);
                 server.joinGame(new JoinGameRequest(color.toString(), gameNumber));
                 return BoardProcesser.makeString(chessBoard, color);
             } catch (IllegalArgumentException e) {
                 throw new ResponseException(400, "Expected: <ID> [WHITE|BLACK]");
-            } catch (NullPointerException e) {
-                throw new ResponseException(400, "No game has been assigned this ID. Type 'list' to get game IDs");
             } catch (ResponseException e) {
                 throw new ResponseException(409, "Could not join game: color already taken");
             }
         }
         throw new ResponseException(400, "Expected: <ID> [WHITE|BLACK]");
+    }
+
+    private ChessBoard getBoard(int gameNumber) throws ResponseException {
+        try {
+            return gameNumberToData.get(gameNumber).game().getBoard();
+        } catch (NullPointerException e) {
+            throw new ResponseException(400, "No game has been assigned this ID. Type 'list' to get game IDs");
+        }
     }
 }
