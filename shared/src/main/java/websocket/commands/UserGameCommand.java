@@ -22,6 +22,7 @@ public class UserGameCommand {
         this.gameID = gameID;
     }
 
+    // 4 subclasses, one for each type, which includes the additional information that type needs
     public enum CommandType {
         CONNECT,
         MAKE_MOVE,
