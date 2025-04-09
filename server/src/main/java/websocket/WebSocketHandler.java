@@ -137,11 +137,10 @@ public class WebSocketHandler {
                 if (el.isJsonObject()) {
                     String commandType = el.getAsJsonObject().get("commandType").getAsString();
                     switch(UserGameCommand.CommandType.valueOf(commandType)) {
-                        // case CONNECT ->
-                        // case LEAVE ->
+                        case CONNECT -> command = ctx.deserialize(el, ConnectCommand.class);
+                        case LEAVE -> command = ctx.deserialize(el, LeaveGameCommand.class);
                         case MAKE_MOVE -> command = ctx.deserialize(el, MakeMoveCommand.class);
-                        // case RESIGN ->
-                        default -> command = ctx.deserialize(el, UserGameCommand.class);
+                        case RESIGN -> command = ctx.deserialize(el, ResignCommand.class);
                     }
                 }
                 return command;

@@ -36,6 +36,7 @@ public class Server {
     private final ClearHandler clearHandler;
     private final UserHandler userHandler;
     private final GameHandler gameHandler;
+    private final WebSocketHandler webSocketHandler;
 
     public Server() {
         gson = new Gson();
@@ -55,6 +56,7 @@ public class Server {
         clearHandler = new ClearHandler(clearService);
         userHandler = new UserHandler(userService, gson);
         gameHandler = new GameHandler(gameService, gson);
+        webSocketHandler = new WebSocketHandler(userService, gameService);
     }
 
     public int run(int desiredPort) {
@@ -63,7 +65,7 @@ public class Server {
         Spark.staticFiles.location("web");
 
         // Register your endpoints and handle exceptions here.
-        Spark.webSocket("/ws", WebSocketHandler.class);
+        Spark.webSocket("/ws", webSocketHandler);
 
         Spark.delete("/db", (req, res) -> clearHandler.handleClear(req, res));
 
