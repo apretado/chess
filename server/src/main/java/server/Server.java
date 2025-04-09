@@ -4,8 +4,8 @@ import com.google.gson.Gson;
 
 import dataaccess.UserDAO;
 import dataaccess.AuthDAO;
-import dataaccess.DataAccessException;
 import dataaccess.GameDAO;
+import dataaccess.DataAccessException;
 
 import dataaccess.MySqlUserDAO;
 import dataaccess.MySqlAuthDAO;
@@ -18,6 +18,7 @@ import service.GameService;
 import handler.ClearHandler;
 import handler.UserHandler;
 import handler.GameHandler;
+import websocket.WebSocketHandler;
 
 import spark.*;
 
@@ -62,6 +63,8 @@ public class Server {
         Spark.staticFiles.location("web");
 
         // Register your endpoints and handle exceptions here.
+        Spark.webSocket("/ws", WebSocketHandler.class);
+
         Spark.delete("/db", (req, res) -> clearHandler.handleClear(req, res));
 
         Spark.post("/user", (req, res) -> userHandler.handleRegister(req, res));
