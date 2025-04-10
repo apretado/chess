@@ -7,19 +7,19 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.eclipse.jetty.websocket.api.Session;
 
 public class ConnectionManager {
-    private final ConcurrentHashMap<String, Connection> connections = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<Session, Connection> connections = new ConcurrentHashMap<>();
 
     public void add(String authToken, Session session, int gameID) {
-        connections.put(authToken, new Connection(authToken, session, gameID));
+        connections.put(session, new Connection(authToken, session, gameID));
     }
 
-    public void remove(String authToken) {
-        connections.remove(authToken);
+    public void remove(Session session) {
+        connections.remove(session);
     }
 
     // Set gameID to -1 to broadcast to everyone
     public void broadcast(int gameID, String excludeAuthToken, String message) throws IOException {
-        ArrayList<String> removeList = new ArrayList<>();
+        ArrayList<Session> removeList = new ArrayList<>();
 
         for (Connection connection : connections.values()) {
             if (connection.getSession().isOpen()) {
@@ -28,12 +28,21 @@ public class ConnectionManager {
                     connection.send(message);
                 }
             } else {
-                removeList.add(connection.getAuthToken());
+                removeList.add(connection.getSession());
             }
         }
 
-        for (String authToken : removeList) {
-            connections.remove(authToken);
+        for (Session session : removeList) {
+            connections.remove(session);
+        }
+    }
+
+    public void sendMessage(Session session, String message) throws IOException {
+        Connection connection = connections.get(session);
+        if (connection.getSession().isOpen()) {
+            connection.send(message);
+        } else {
+            remove(session);
         }
     }
 }
