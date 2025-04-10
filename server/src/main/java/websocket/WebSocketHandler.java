@@ -12,6 +12,10 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonDeserializer;
 
 import chess.ChessGame;
+import chess.ChessMove;
+import chess.ChessPosition;
+import chess.InvalidMoveException;
+import chess.ChessGame.TeamColor;
 import dataaccess.UserDAO;
 import model.GameData;
 import dataaccess.AuthDAO;
@@ -41,22 +45,17 @@ import org.eclipse.jetty.websocket.api.Session;
 public class WebSocketHandler {
     private final ConnectionManager connections = new ConnectionManager();
     private final Gson serializer = createSerializer();
-    private final Gson gson = new Gson();
-    private final UserService userService;
-    private final GameService gameService;
+    private final AuthDAO authDAO;
+    private final GameDAO gameDAO;
+    private final Gson gson;
 
-    public WebSocketHandler(UserService userService, GameService gameService) {
-        this.userService = userService;
-        this.gameService = gameService;
+    public WebSocketHandler(AuthDAO authDAO, GameDAO gameDAO, Gson gson) {
+        this.authDAO = authDAO;
+        this.gameDAO = gameDAO;
+        this.gson = gson;
     }
 
     @OnWebSocketMessage
-    // public void onMessage(Session session, String message) throws IOException {
-    //     UserGameCommand command = createSerializer().fromJson(message, UserGameCommand.class);
-    //     switch (command.getCommandType()) {
-    //         case CONNECT -> connect(command.getAuthToken(), session);
-    //     }
-    // }
     public void onMessage(Session session, String message) throws IOException {
         try {
             UserGameCommand command = serializer.fromJson(message, UserGameCommand.class);
@@ -98,7 +97,7 @@ public class WebSocketHandler {
         connections.add(command.getAuthToken(), session, command.getGameID());
 
         // 1. Server sends a LOAD_GAME message back to the root client.
-        GameData gameData = new MySqlGameDAO().getGame(command.getGameID());
+        GameData gameData = gameDAO.getGame(command.getGameID());
         sendMessage(session.getRemote(), new LoadGameMessage(gameData.game()));
 
         // 2. Server sends a Notification message to all other clients in that game
@@ -116,8 +115,56 @@ public class WebSocketHandler {
         connections.broadcast(command.getGameID(), command.getAuthToken(), notificationMessage);
     }
 
-    private void makeMove(Session session, String username, MakeMoveCommand command) {
-        throw new UnsupportedOperationException("Unimplemented method 'makeMove'");
+    private void makeMove(Session session, String username, MakeMoveCommand command) throws DataAccessException, IOException {
+        // 1. Server verifies validity of move
+        GameData gameData = gameDAO.getGame(command.getGameID());
+        ChessGame game = gameData.game();
+
+        TeamColor colorTurn = game.getTeamTurn();
+        String userTurn = colorTurn == TeamColor.WHITE ? gameData.whiteUsername() : gameData.blackUsername();
+
+        ChessMove move = command.getMove();
+        ChessPosition startPosition = move.getStartPosition();
+        TeamColor pieceColor = game.getBoard().getPiece(startPosition).getTeamColor();
+
+        if (
+            !Objects.equals(username, userTurn) // Check if it's the user's turn
+            || colorTurn != pieceColor // Check if they are moving their own piece
+        ) {
+            sendMessage(session.getRemote(), new ErrorMessage("Invalid move"));
+            return;
+        }
+
+        // 2. Game is updated to represent the move.  Game is updated in the database.
+        try {
+            game.makeMove(move);
+        } catch (InvalidMoveException e) {
+            sendMessage(session.getRemote(), new ErrorMessage("Invalid move"));
+            return;
+        }
+        gameDAO.updateGame(new GameData(gameData.gameID(), gameData.whiteUsername(), gameData.blackUsername(), gameData.gameName(), game));
+
+        // 3. Server sends a LOAD_GAME message to all clients in the game (including the root client) with an updated game.
+        String loadGameMessage = gson.toJson(new LoadGameMessage(game));
+        connections.broadcast(command.getGameID(), "", loadGameMessage);
+
+        // 4. Server sends a Notification message to all other clients in that game informing them what move was made.
+        String notificationMessage = gson.toJson(new NotificationMessage(username + " made a move"));
+        connections.broadcast(command.getGameID(), command.getAuthToken(), notificationMessage);
+
+        // 5. If the move results in check, checkmate or stalemate the server sends a Notification message to all clients.
+        TeamColor opponentColor = game.getTeamTurn();
+        String opponentName = opponentColor == TeamColor.WHITE ? gameData.whiteUsername() : gameData.blackUsername();
+        if (game.isInCheckmate(opponentColor)) {
+            String checkmateMessage = gson.toJson(new NotificationMessage(username + " put " + opponentName + " in checkmate"));
+            connections.broadcast(-1, "", checkmateMessage);
+        } else if (game.isInCheck(opponentColor)) {
+            String checkMessage = gson.toJson(new NotificationMessage(username + " put " + opponentName + " in check"));
+            connections.broadcast(-1, "", checkMessage);
+        } else if (game.isInStalemate(opponentColor)) {
+            String stalemateMessage = gson.toJson(new NotificationMessage(username + " put " + opponentName + " in stalemate"));
+            connections.broadcast(-1, "", stalemateMessage);
+        }
     }
 
     private void leaveGame(Session session, String username, LeaveGameCommand command) {

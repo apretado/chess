@@ -56,7 +56,7 @@ public class Server {
         clearHandler = new ClearHandler(clearService);
         userHandler = new UserHandler(userService, gson);
         gameHandler = new GameHandler(gameService, gson);
-        webSocketHandler = new WebSocketHandler(userService, gameService);
+        webSocketHandler = new WebSocketHandler(authDAO, gameDAO, gson);
     }
 
     public int run(int desiredPort) {
