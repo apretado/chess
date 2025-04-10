@@ -120,12 +120,18 @@ public class WebSocketHandler {
             ChessPosition startPosition = move.getStartPosition();
             ChessPiece startPiece = game.getBoard().getPiece(startPosition);
 
+            // Check if it's the user's turn
+            if (!Objects.equals(username, userTurn)) {
+                sendMessage(session, new ErrorMessage(String.format("Error: not your turn. %s (%s) to play.", userTurn, colorTurn.toString())));
+                return;
+            }
+
+            // Check if they are moving their own piece
             if (
-                !Objects.equals(username, userTurn) // Check if it's the user's turn
-                || startPiece == null
-                || colorTurn != startPiece.getTeamColor() // Check if they are moving their own piece
+                startPiece == null
+                || colorTurn != startPiece.getTeamColor()
             ) {
-                sendMessage(session, new ErrorMessage("Invalid move"));
+                sendMessage(session, new ErrorMessage("Error: you can only move your own pieces"));
                 return;
             }
 
@@ -175,7 +181,7 @@ public class WebSocketHandler {
             GameData gameData = gameDAO.getGame(command.getGameID());
             if (Objects.equals(username, gameData.whiteUsername())) {
                 gameData = gameData.renameWhite(null);
-            } else {
+            } else if (Objects.equals(username, gameData.blackUsername())) {
                 gameData = gameData.renameBlack(null);
             }
             gameDAO.updateGame(gameData);
