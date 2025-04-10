@@ -71,7 +71,7 @@ public class GameplayClient extends PregameClient {
             // Convert string coordinates to ChessMove
             String promotion = null;
             if (params.length >= 3) {
-                promotion = params[3];
+                promotion = params[2];
             }
             ChessMove chessMove = coordsToChessMove(params[0], params[1], promotion);
             // Send move over websocket
