@@ -28,7 +28,7 @@ public class Repl {
         webSocket = new WebSocketFacade(serverUrl, this);
         postloginClient = new PostloginClient(server, webSocket, this);
         gameplayClient = new GameplayClient(webSocket, this);
-        confirmationClient = new ConfirmationClient(null, webSocket);
+        confirmationClient = new ConfirmationClient(webSocket, this);
 
         client = preloginClient;
     }

@@ -6,7 +6,7 @@ import websocket.commands.ResignCommand;
 public class ConfirmationClient extends PregameClient {
     WebSocketFacade webSocket;
 
-    public ConfirmationClient(Repl repl, WebSocketFacade webSocket) {
+    public ConfirmationClient(WebSocketFacade webSocket, Repl repl) {
             super(repl);
             this.webSocket = webSocket;
         }
@@ -27,6 +27,7 @@ public class ConfirmationClient extends PregameClient {
                 repl.setState(State.LOGGED_IN);
                 return "You resigned";
             case "n":
+                repl.setState(State.PLAYING);
                 return "";
             default:
                 return help();

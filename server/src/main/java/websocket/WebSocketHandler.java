@@ -170,7 +170,7 @@ public class WebSocketHandler {
             if (gameState != null) {
                 String opponentName = opponentColor == TeamColor.WHITE ? gameData.whiteUsername() : gameData.blackUsername();
                 String gameStateMessage = gson.toJson(new NotificationMessage(username + " put " + opponentName + gameState));
-                connections.broadcast(-1, "", gameStateMessage);
+                connections.broadcast(gameData.gameID(), "", gameStateMessage);
                 gameDAO.updateGame(new GameData(gameData.gameID(), gameData.whiteUsername(), gameData.blackUsername(), gameData.gameName(), game));
             }
         } catch (DataAccessException e) {
@@ -224,7 +224,7 @@ public class WebSocketHandler {
             // 2. Server sends a Notification message to all clients in that game informing them that the root client resigned.
             // This applies to both players and observers.
             String resignMessage = gson.toJson(new NotificationMessage(username + " resigned"));
-            connections.broadcast(command.getGameID(), "", resignMessage);
+            connections.broadcast(command.getGameID(), command.getAuthToken(), resignMessage);
         } catch (DataAccessException e) {
             sendMessage(session, new ErrorMessage("Error: invalid game ID"));
         }

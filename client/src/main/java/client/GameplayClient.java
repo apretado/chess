@@ -88,7 +88,7 @@ public class GameplayClient extends PregameClient {
 
     private String resign() throws ResponseException {
         super.repl.setState(State.CONFIRMING);
-        return "\nAre you sure you want to quit? [y/n] >>>> ";
+        return "\nAre you sure you want to resign? [y/n]";
     }
 
     private static int letterToInt(char letter) throws ResponseException {

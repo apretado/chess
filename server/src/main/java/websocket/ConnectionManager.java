@@ -17,14 +17,15 @@ public class ConnectionManager {
         connections.remove(session);
     }
 
-    // Set gameID to -1 to broadcast to everyone
     public void broadcast(int gameID, String excludeAuthToken, String message) throws IOException {
         ArrayList<Session> removeList = new ArrayList<>();
 
         for (Connection connection : connections.values()) {
             if (connection.getSession().isOpen()) {
-                if ((gameID == -1 || connection.getGameID() == gameID)
-                && !connection.getAuthToken().equals(excludeAuthToken)) {
+                if (
+                    connection.getGameID() == gameID
+                    && !connection.getAuthToken().equals(excludeAuthToken)
+                ) {
                     connection.send(message);
                 }
             } else {
