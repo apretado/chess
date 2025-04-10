@@ -13,11 +13,21 @@ public class ChessGame {
 
     private TeamColor teamTurn;
     private ChessBoard board;
+    private Boolean isOver;
 
     public ChessGame() {
         teamTurn = TeamColor.WHITE;
         board = new ChessBoard();
         board.resetBoard();
+        isOver = false;
+    }
+
+    public void setIsOver(Boolean isOver) {
+        this.isOver = isOver;
+    }
+
+    public Boolean getIsOver() {
+        return this.isOver;
     }
 
     /**

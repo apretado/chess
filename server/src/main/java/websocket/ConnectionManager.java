@@ -36,13 +36,4 @@ public class ConnectionManager {
             connections.remove(session);
         }
     }
-
-    public void sendMessage(Session session, String message) throws IOException {
-        Connection connection = connections.get(session);
-        if (connection.getSession().isOpen()) {
-            connection.send(message);
-        } else {
-            remove(session);
-        }
-    }
 }
