@@ -108,7 +108,7 @@ public class ServerFacadeTests {
     @Test
     void createGameSuccess() throws ResponseException {
         // Register user
-        RegisterResult registerResult = facade.register(new RegisterRequest("username", "password", "email"));
+        facade.register(new RegisterRequest("username", "password", "email"));
         // Create game
         facade.createGame(new CreateGameRequest("game name"));
         // Check if the game was created
@@ -146,7 +146,7 @@ public class ServerFacadeTests {
     @Test
     void joinGameSuccess() throws ResponseException {
         // Register user
-        String authToken = facade.register(new RegisterRequest("username", "password", "email")).authToken();
+        facade.register(new RegisterRequest("username", "password", "email")).authToken();
         // Create game
         int gameID = facade.createGame(new CreateGameRequest("game name")).gameID();
         // Join game

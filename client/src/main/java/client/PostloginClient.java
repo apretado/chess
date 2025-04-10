@@ -3,7 +3,6 @@ package client;
 import java.util.HashMap;
 import java.util.Map;
 
-import chess.ChessBoard;
 import chess.ChessGame.TeamColor;
 import exception.ResponseException;
 import model.GameData;
@@ -105,13 +104,12 @@ public class PostloginClient extends PregameClient {
         if (params.length >= 1) {
             try {
                 int gameNumber = Integer.parseInt(params[0]);
-                // ChessBoard chessBoard = getBoard(gameNumber);
                 GameData gameData = gameNumberToData.get(gameNumber);
                 repl.setGameData(gameData);
                 webSocket.connect(new ConnectCommand(super.repl.getAuthToken(), gameData.gameID()));
                 repl.setState(State.OBSERVING);
                 repl.setTeamColor(TeamColor.WHITE);
-                return String.format("You joined game %d as an observer", gameNumber); //BoardProcesser.makeString(chessBoard, TeamColor.WHITE);
+                return String.format("You joined game %d as an observer", gameNumber);
             } catch (IllegalArgumentException e) {
                 throw new ResponseException(400, "Expected: <ID>");
             }
@@ -133,7 +131,7 @@ public class PostloginClient extends PregameClient {
                 webSocket.connect(new ConnectCommand(super.repl.getAuthToken(), gameData.gameID()));
                 repl.setState(State.PLAYING);
                 repl.setTeamColor(color);
-                return String.format("You joined game %d as %s", gameNumber, color.toString()); //BoardProcesser.makeString(chessBoard, color);
+                return String.format("You joined game %d as %s", gameNumber, color.toString());
             } catch (IllegalArgumentException e) {
                 throw new ResponseException(400, "Expected: <ID> [WHITE|BLACK]");
             } catch (ResponseException e) {
@@ -141,15 +139,5 @@ public class PostloginClient extends PregameClient {
             }
         }
         throw new ResponseException(400, "Expected: <ID> [WHITE|BLACK]");
-    }
-
-    private ChessBoard getBoard(int gameNumber) throws ResponseException {
-        try {
-            GameData gameData = gameNumberToData.get(gameNumber);
-            repl.setGameData(gameData);
-            return gameData.game().getBoard();
-        } catch (NullPointerException e) {
-            throw new ResponseException(400, "No game has been assigned this ID. Type 'list' to get game IDs");
-        }
     }
 }

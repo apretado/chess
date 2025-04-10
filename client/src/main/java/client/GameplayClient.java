@@ -2,7 +2,6 @@ package client;
 
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Scanner;
 
 import chess.ChessMove;
 import chess.ChessPiece;
@@ -11,7 +10,6 @@ import chess.ChessPiece.PieceType;
 import exception.ResponseException;
 import websocket.commands.LeaveGameCommand;
 import websocket.commands.MakeMoveCommand;
-import websocket.commands.ResignCommand;
 
 public class GameplayClient extends PregameClient {
     WebSocketFacade webSocket;
