@@ -149,7 +149,9 @@ public class WebSocketHandler {
             connections.broadcast(command.getGameID(), "", loadGameMessage);
 
             // 4. Server sends a Notification message to all other clients in that game informing them what move was made.
-            String notificationMessage = gson.toJson(new NotificationMessage(username + " made a move"));
+            String notificationMessage = gson.toJson(new NotificationMessage(
+                username + " moved " + chessPositionToString(move.getEndPosition()) + " to " + chessPositionToString(move.getEndPosition())
+            ));
             connections.broadcast(command.getGameID(), command.getAuthToken(), notificationMessage);
 
             // 5. If the move results in check, checkmate or stalemate the server sends a Notification message to all clients.
@@ -157,17 +159,18 @@ public class WebSocketHandler {
             String gameState = null;
             if (game.isInCheckmate(opponentColor)) {
                 gameState = " in checkmate";
+                game.setIsOver(true);
             } else if (game.isInCheck(opponentColor)) {
                 gameState = " in check";
             } else if (game.isInStalemate(opponentColor)) {
                 gameState = " in stalemate";
+                game.setIsOver(true);
             }
 
             if (gameState != null) {
                 String opponentName = opponentColor == TeamColor.WHITE ? gameData.whiteUsername() : gameData.blackUsername();
                 String gameStateMessage = gson.toJson(new NotificationMessage(username + " put " + opponentName + gameState));
                 connections.broadcast(-1, "", gameStateMessage);
-                game.setIsOver(true);
                 gameDAO.updateGame(new GameData(gameData.gameID(), gameData.whiteUsername(), gameData.blackUsername(), gameData.gameName(), game));
             }
         } catch (DataAccessException e) {
@@ -246,5 +249,11 @@ public class WebSocketHandler {
             });
         
         return gsonBuilder.create();
+    }
+
+    private static String chessPositionToString(ChessPosition position) {
+        String output = String.valueOf((char) ('a' + position.getColumn() - 1));
+        output += String.valueOf(position.getRow());
+        return output;
     }
 }

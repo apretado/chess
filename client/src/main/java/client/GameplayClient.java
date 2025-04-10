@@ -2,6 +2,7 @@ package client;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Scanner;
 
 import chess.ChessMove;
 import chess.ChessPiece;
@@ -88,8 +89,8 @@ public class GameplayClient extends PregameClient {
     }
 
     private String resign() throws ResponseException {
-        webSocket.resign(new ResignCommand(super.repl.getAuthToken(), super.repl.getGameData().gameID()));
-        return "Resigning...";
+        super.repl.setState(State.CONFIRMING);
+        return "\nAre you sure you want to quit? [y/n] >>>> ";
     }
 
     private static int letterToInt(char letter) throws ResponseException {

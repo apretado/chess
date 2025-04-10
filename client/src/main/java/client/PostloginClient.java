@@ -105,11 +105,13 @@ public class PostloginClient extends PregameClient {
         if (params.length >= 1) {
             try {
                 int gameNumber = Integer.parseInt(params[0]);
-                ChessBoard chessBoard = getBoard(gameNumber);
-                webSocket.connect(new ConnectCommand(super.repl.getAuthToken(), super.repl.getGameData().gameID()));
+                // ChessBoard chessBoard = getBoard(gameNumber);
+                GameData gameData = gameNumberToData.get(gameNumber);
+                repl.setGameData(gameData);
+                webSocket.connect(new ConnectCommand(super.repl.getAuthToken(), gameData.gameID()));
                 repl.setState(State.OBSERVING);
                 repl.setTeamColor(TeamColor.WHITE);
-                return BoardProcesser.makeString(chessBoard, TeamColor.WHITE);
+                return String.format("You joined game %d as an observer", gameNumber); //BoardProcesser.makeString(chessBoard, TeamColor.WHITE);
             } catch (IllegalArgumentException e) {
                 throw new ResponseException(400, "Expected: <ID>");
             }
@@ -125,12 +127,13 @@ public class PostloginClient extends PregameClient {
             try {
                 TeamColor color = TeamColor.valueOf(params[1].toUpperCase());
                 int gameNumber = Integer.parseInt(params[0]);
-                ChessBoard chessBoard = getBoard(gameNumber);
-                server.joinGame(new JoinGameRequest(color.toString(), gameNumber));
-                webSocket.connect(new ConnectCommand(super.repl.getAuthToken(), super.repl.getGameData().gameID()));
+                GameData gameData = gameNumberToData.get(gameNumber);
+                repl.setGameData(gameData);
+                server.joinGame(new JoinGameRequest(color.toString(), gameData.gameID()));
+                webSocket.connect(new ConnectCommand(super.repl.getAuthToken(), gameData.gameID()));
                 repl.setState(State.PLAYING);
                 repl.setTeamColor(color);
-                return BoardProcesser.makeString(chessBoard, color);
+                return String.format("You joined game %d as %s", gameNumber, color.toString()); //BoardProcesser.makeString(chessBoard, color);
             } catch (IllegalArgumentException e) {
                 throw new ResponseException(400, "Expected: <ID> [WHITE|BLACK]");
             } catch (ResponseException e) {

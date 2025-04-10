@@ -1,0 +1,17 @@
+join 25 white, black, observe
+black move g2 g4 (invalid)
+white move g2 g4
+white move a2 a4 (invalid)
+black move a2 a4 (invalid)
+white move e7 e6 (invalid)
+black move 2a 4a (invalid)
+black move a 2 a 4 (invalid)
+black move e7 e6
+white move f2 f3
+all highlight d8
+highlight 8d
+observer leave
+redraw
+black move d8 h4  [checkmate]
+
+also test promotion

@@ -12,6 +12,7 @@ public class Repl {
     private final PreloginClient preloginClient;
     private final PostloginClient postloginClient;
     private final GameplayClient gameplayClient;
+    private final ConfirmationClient confirmationClient;
     private Client client;
     private State state = State.LOGGED_OUT;
 
@@ -27,6 +28,7 @@ public class Repl {
         webSocket = new WebSocketFacade(serverUrl, this);
         postloginClient = new PostloginClient(server, webSocket, this);
         gameplayClient = new GameplayClient(webSocket, this);
+        confirmationClient = new ConfirmationClient(null, webSocket);
 
         client = preloginClient;
     }
@@ -65,9 +67,11 @@ public class Repl {
                 break;
             case ERROR:
                 System.out.println(((ErrorMessage) message).getErrorMessage());
+                System.out.printf("\n[%s]>>>> ", state);
                 break;
             case NOTIFICATION:
                 System.out.println(((NotificationMessage) message).getMessage());
+                System.out.printf("\n[%s]>>>> ", state);
                 break;
         }
     }
@@ -94,6 +98,9 @@ public class Repl {
             case OBSERVING:
             case PLAYING:
                 client = gameplayClient;
+                break;
+            case CONFIRMING:
+                client = confirmationClient;
                 break;
         }
     }
