@@ -55,6 +55,7 @@ public class ServerFacade {
 
     public void joinGame(JoinGameRequest joinGameRequest) throws ResponseException {
         makeRequest("PUT", "/game", joinGameRequest, null);
+
     }
 
     public void clear() throws ResponseException {

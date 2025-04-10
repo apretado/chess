@@ -3,14 +3,11 @@ package client;
 import java.util.Arrays;
 
 import exception.ResponseException;
-import server.ServerFacade;
 
 public abstract class PregameClient implements Client {
-    protected final ServerFacade server;
     protected Repl repl;
 
-    public PregameClient(ServerFacade server, Repl repl) {
-        this.server = server;
+    public PregameClient(Repl repl) {
         this.repl = repl;
     }
 

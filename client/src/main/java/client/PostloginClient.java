@@ -11,12 +11,17 @@ import server.ServerFacade;
 import service.request.CreateGameRequest;
 import service.request.JoinGameRequest;
 import service.result.ListGamesResult;
+import websocket.commands.ConnectCommand;
 
 public class PostloginClient extends PregameClient {
     private Map<Integer, GameData> gameNumberToData;
+    ServerFacade server;
+    WebSocketFacade webSocket;
 
-    public PostloginClient(ServerFacade server, Repl repl) {
-        super(server, repl);
+    public PostloginClient(ServerFacade server, WebSocketFacade webSocket, Repl repl) {
+        super(repl);
+        this.server = server;
+        this.webSocket = webSocket;
     }
 
     @Override
@@ -49,6 +54,7 @@ public class PostloginClient extends PregameClient {
     public String logout() throws ResponseException {
         try {
             server.logout();
+            repl.setAuthToken(null);
         } catch (ResponseException e) {
             throw new ResponseException(403, "Error: unable to logout");
         }
@@ -100,6 +106,9 @@ public class PostloginClient extends PregameClient {
             try {
                 int gameNumber = Integer.parseInt(params[0]);
                 ChessBoard chessBoard = getBoard(gameNumber);
+                webSocket.connect(new ConnectCommand(super.repl.getAuthToken(), super.repl.getGameData().gameID()));
+                repl.setState(State.OBSERVING);
+                repl.setTeamColor(TeamColor.WHITE);
                 return BoardProcesser.makeString(chessBoard, TeamColor.WHITE);
             } catch (IllegalArgumentException e) {
                 throw new ResponseException(400, "Expected: <ID>");
@@ -118,6 +127,9 @@ public class PostloginClient extends PregameClient {
                 int gameNumber = Integer.parseInt(params[0]);
                 ChessBoard chessBoard = getBoard(gameNumber);
                 server.joinGame(new JoinGameRequest(color.toString(), gameNumber));
+                webSocket.connect(new ConnectCommand(super.repl.getAuthToken(), super.repl.getGameData().gameID()));
+                repl.setState(State.PLAYING);
+                repl.setTeamColor(color);
                 return BoardProcesser.makeString(chessBoard, color);
             } catch (IllegalArgumentException e) {
                 throw new ResponseException(400, "Expected: <ID> [WHITE|BLACK]");
@@ -130,7 +142,9 @@ public class PostloginClient extends PregameClient {
 
     private ChessBoard getBoard(int gameNumber) throws ResponseException {
         try {
-            return gameNumberToData.get(gameNumber).game().getBoard();
+            GameData gameData = gameNumberToData.get(gameNumber);
+            repl.setGameData(gameData);
+            return gameData.game().getBoard();
         } catch (NullPointerException e) {
             throw new ResponseException(400, "No game has been assigned this ID. Type 'list' to get game IDs");
         }

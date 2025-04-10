@@ -4,10 +4,15 @@ import exception.ResponseException;
 import server.ServerFacade;
 import service.request.LoginRequest;
 import service.request.RegisterRequest;
+import service.result.LoginResult;
+import service.result.RegisterResult;
 
 public class PreloginClient extends PregameClient {
+    ServerFacade server;
+    
     public PreloginClient(ServerFacade server, Repl repl) {
-        super(server, repl);
+        super(repl);
+        this.server = server;
     }
 
     @Override
@@ -34,7 +39,8 @@ public class PreloginClient extends PregameClient {
     public String register(String... params) throws ResponseException {
         if (params.length >= 3) {
             try {
-                server.register(new RegisterRequest(params[0], params[1], params[2]));
+                RegisterResult registerResult = server.register(new RegisterRequest(params[0], params[1], params[2]));
+                repl.setAuthToken(registerResult.authToken());
             } catch (ResponseException e) {
                 throw new ResponseException(403, "Error: username already taken");
             }
@@ -47,7 +53,8 @@ public class PreloginClient extends PregameClient {
     public String login(String... params) throws ResponseException {
         if (params.length >= 2) {
             try {
-                server.login(new LoginRequest(params[0], params[1]));
+                LoginResult loginResult = server.login(new LoginRequest(params[0], params[1]));
+                repl.setAuthToken(loginResult.authToken());
             } catch (ResponseException e) {
                 throw new ResponseException(401, "Error: incorrect username or password");
             }
