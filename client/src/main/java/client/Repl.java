@@ -6,10 +6,7 @@ import chess.ChessGame;
 import chess.ChessGame.TeamColor;
 import model.GameData;
 import server.ServerFacade;
-import websocket.commands.ConnectCommand;
 import websocket.messages.*;
-
-import static ui.EscapeSequences.*;
 
 public class Repl {
     private final PreloginClient preloginClient;
@@ -46,9 +43,10 @@ public class Repl {
 
                 try {
                     result = client.eval(line);
-                    System.out.print(result);
+                    System.out.print("\n" + result);
                 } catch (Throwable e) {
-                    System.out.print(e.toString());
+                    System.out.println(e.toString());
+                    System.out.printf("\n[%s]>>>> ", state);
                 }
             }
         }
@@ -80,7 +78,8 @@ public class Repl {
     }
 
     public void say(String message) {
-        System.out.println(message);
+        System.out.println("\n" + message);
+        System.out.printf("\n[%s]>>>> ", state);
     }
 
     public void setState(State newState) {

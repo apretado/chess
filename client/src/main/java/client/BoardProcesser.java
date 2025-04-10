@@ -7,9 +7,12 @@ import chess.ChessPosition;
 
 import static ui.EscapeSequences.*;
 
+import java.util.HashSet;
+import java.util.Objects;
 
 public class BoardProcesser {
-    public static String makeString(ChessBoard chessBoard, TeamColor color) {
+    public static String makeStringHighlight(ChessBoard chessBoard, TeamColor color, ChessPosition startPosition, HashSet<ChessPosition> highlightPositions) {
+
         // Set direction based upon color
         int rowStart = ChessBoard.getBoardSize() + 1;
         int rowEnd = -1;
@@ -42,7 +45,16 @@ public class BoardProcesser {
                     continue;
                 }
                 // Background color
-                output.append((row - col) % 2 == 0 ? SET_BG_COLOR_BLACK : SET_BG_COLOR_WHITE);
+                String backgroundColor = null;
+                ChessPosition currentSquare = new ChessPosition(row, col);
+                if (Objects.equals(currentSquare, startPosition)) {
+                    backgroundColor = SET_BG_COLOR_YELLOW;
+                } else if (highlightPositions != null && highlightPositions.contains(currentSquare)) {
+                    backgroundColor = (row - col) % 2 == 0 ? SET_BG_COLOR_DARK_GREEN : SET_BG_COLOR_GREEN;
+                } else {
+                    backgroundColor = (row - col) % 2 == 0 ? SET_BG_COLOR_BLACK : SET_BG_COLOR_WHITE;
+                }
+                output.append(backgroundColor);
                 // Chess piece
                 ChessPiece chessPiece = chessBoard.getPiece(new ChessPosition(row, col));
                 if (chessPiece == null) {
@@ -65,5 +77,9 @@ public class BoardProcesser {
             ));
         }
         return output.toString();
+    }
+
+    public static String makeString(ChessBoard chessBoard, TeamColor color) {
+        return makeStringHighlight(chessBoard, color, null, null);
     }
 }

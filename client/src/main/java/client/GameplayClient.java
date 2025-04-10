@@ -1,5 +1,8 @@
 package client;
 
+import java.util.Collection;
+import java.util.HashSet;
+
 import chess.ChessMove;
 import chess.ChessPiece;
 import chess.ChessPosition;
@@ -37,9 +40,24 @@ public class GameplayClient extends PregameClient {
             case "leave" -> leave();
             case "move" -> move(params);
             case "resign" -> resign();
-            // case "highlight" -> highlight(params);
+            case "highlight" -> highlight(params);
             default -> help();
         };
+    }
+
+    private String highlight(String... params) throws ResponseException {
+        if (params.length >= 1) {
+            ChessPosition startPosition = coordsToPosition(params[0]);
+            Collection<ChessMove> validMoves = super.repl.getGameData().game().validMoves(startPosition);
+            HashSet<ChessPosition> highlightPositions = new HashSet<>();
+            if (validMoves != null) {
+                for (ChessMove move : validMoves) {
+                    highlightPositions.add(move.getEndPosition());
+                }
+            }
+            return BoardProcesser.makeStringHighlight(super.repl.getGameData().game().getBoard(), super.repl.getTeamColor(), startPosition, highlightPositions);
+        }
+        throw new ResponseException(400, "Expected: <COORDINATE>");
     }
 
     private String redraw() {
@@ -97,14 +115,14 @@ public class GameplayClient extends PregameClient {
         };
     }
 
-    private static ChessMove coordsToChessMove(String start, String end, String promotion) throws ResponseException {
-        if (start.length() != 2 || end.length() != 2) {
-            throw new ResponseException(400, "Expected: <START_POSITION> <END_POSITION> [PROMOTION_PIECE]");
+    private static ChessPosition coordsToPosition(String coords) throws ResponseException {
+        if (coords.length() != 2) {
+            throw new ResponseException(400, "Invalid coordinates");
         }
+        return new ChessPosition(numToInt(coords.charAt(1)), letterToInt(coords.charAt(0)));
+    }
 
-        ChessPosition startPosition = new ChessPosition(numToInt(start.charAt(1)), letterToInt(start.charAt(0)));
-        ChessPosition endPosition = new ChessPosition(numToInt(end.charAt(1)), letterToInt(end.charAt(0)));
-        ChessPiece.PieceType pieceType = stringToPieceType(promotion);
-        return new ChessMove(startPosition, endPosition, pieceType);
+    private static ChessMove coordsToChessMove(String start, String end, String promotion) throws ResponseException {
+        return new ChessMove(coordsToPosition(start), coordsToPosition(end), stringToPieceType(promotion));
     }
 }
