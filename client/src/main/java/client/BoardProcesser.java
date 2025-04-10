@@ -11,7 +11,9 @@ import java.util.HashSet;
 import java.util.Objects;
 
 public class BoardProcesser {
-    public static String makeStringHighlight(ChessBoard chessBoard, TeamColor color, ChessPosition startPosition, HashSet<ChessPosition> highlightPositions) {
+    public static String makeStringHighlight(
+        ChessBoard chessBoard, TeamColor color, ChessPosition startPosition, HashSet<ChessPosition> highlightPositions
+    ) {
 
         // Set direction based upon color
         int rowStart = ChessBoard.getBoardSize() + 1;

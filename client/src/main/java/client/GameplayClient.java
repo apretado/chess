@@ -55,7 +55,9 @@ public class GameplayClient extends PregameClient {
                     highlightPositions.add(move.getEndPosition());
                 }
             }
-            return BoardProcesser.makeStringHighlight(super.repl.getGameData().game().getBoard(), super.repl.getTeamColor(), startPosition, highlightPositions);
+            return BoardProcesser.makeStringHighlight(
+                super.repl.getGameData().game().getBoard(), super.repl.getTeamColor(), startPosition, highlightPositions
+            );
         }
         throw new ResponseException(400, "Expected: <COORDINATE>");
     }
