@@ -2,7 +2,6 @@ package websocket;
 
 import java.io.IOException;
 import java.util.Objects;
-import java.util.Vector;
 
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketMessage;
 import org.eclipse.jetty.websocket.api.annotations.WebSocket;
@@ -13,6 +12,7 @@ import com.google.gson.JsonDeserializer;
 
 import chess.ChessGame;
 import chess.ChessMove;
+import chess.ChessPiece;
 import chess.ChessPosition;
 import chess.InvalidMoveException;
 import chess.ChessGame.TeamColor;
@@ -77,133 +77,148 @@ public class WebSocketHandler {
         }
     }
 
-    private void connect(Session session, String username, ConnectCommand command) throws IOException, DataAccessException {
-        connections.add(command.getAuthToken(), session, command.getGameID());
+    private void connect(Session session, String username, ConnectCommand command) throws IOException {
+        try {
+            // 1. Server sends a LOAD_GAME message back to the root client.
+            GameData gameData = gameDAO.getGame(command.getGameID());
+            connections.add(command.getAuthToken(), session, command.getGameID());
+            sendMessage(session, new LoadGameMessage(gameData.game()));
 
-        // 1. Server sends a LOAD_GAME message back to the root client.
-        GameData gameData = gameDAO.getGame(command.getGameID());
-        sendMessage(session, new LoadGameMessage(gameData.game()));
-
-        // 2. Server sends a Notification message to all other clients in that game
-        // informing them the root client connected to the game,
-        // either as a player (in which case their color must be specified) or as an observer.
-        String color;
-        if (Objects.equals(username, gameData.whiteUsername())){
-            color = "white";
-        } else if (Objects.equals(username, gameData.blackUsername())) {
-            color = "black";
-        } else {
-            color = "an observer";
+            // 2. Server sends a Notification message to all other clients in that game
+            // informing them the root client connected to the game,
+            // either as a player (in which case their color must be specified) or as an observer.
+            String color;
+            if (Objects.equals(username, gameData.whiteUsername())){
+                color = "white";
+            } else if (Objects.equals(username, gameData.blackUsername())) {
+                color = "black";
+            } else {
+                color = "an observer";
+            }
+            String notificationMessage = gson.toJson(new NotificationMessage(username + " joined the game as " + color));
+            connections.broadcast(command.getGameID(), command.getAuthToken(), notificationMessage);
+        } catch (DataAccessException e) {
+            sendMessage(session, new ErrorMessage("Error: invalid game ID"));
         }
-        String notificationMessage = gson.toJson(new NotificationMessage(username + " joined the game as " + color));
-        connections.broadcast(command.getGameID(), command.getAuthToken(), notificationMessage);
     }
 
-    private void makeMove(Session session, String username, MakeMoveCommand command) throws DataAccessException, IOException {
+    private void makeMove(Session session, String username, MakeMoveCommand command) throws IOException {
         // Check if the game is over
-        GameData gameData = gameDAO.getGame(command.getGameID());
-        ChessGame game = gameData.game();
-        if (game.getIsOver()) {
-            sendMessage(session, new ErrorMessage("Error: game is over"));
-            return;
-        }
-
-        // 1. Server verifies validity of move
-        TeamColor colorTurn = game.getTeamTurn();
-        String userTurn = colorTurn == TeamColor.WHITE ? gameData.whiteUsername() : gameData.blackUsername();
-
-        ChessMove move = command.getMove();
-        ChessPosition startPosition = move.getStartPosition();
-        TeamColor pieceColor = game.getBoard().getPiece(startPosition).getTeamColor();
-
-        if (
-            !Objects.equals(username, userTurn) // Check if it's the user's turn
-            || colorTurn != pieceColor // Check if they are moving their own piece
-        ) {
-            sendMessage(session, new ErrorMessage("Invalid move"));
-            return;
-        }
-
-        // 2. Game is updated to represent the move.  Game is updated in the database.
         try {
-            game.makeMove(move);
-        } catch (InvalidMoveException e) {
-            sendMessage(session, new ErrorMessage("Invalid move"));
-            return;
+            GameData gameData = gameDAO.getGame(command.getGameID());
+            ChessGame game = gameData.game();
+            if (game.getIsOver()) {
+                sendMessage(session, new ErrorMessage("Error: game is over"));
+                return;
+            }
+
+            // 1. Server verifies validity of move
+            TeamColor colorTurn = game.getTeamTurn();
+            String userTurn = colorTurn == TeamColor.WHITE ? gameData.whiteUsername() : gameData.blackUsername();
+
+            ChessMove move = command.getMove();
+            ChessPosition startPosition = move.getStartPosition();
+            ChessPiece startPiece = game.getBoard().getPiece(startPosition);
+
+            if (
+                !Objects.equals(username, userTurn) // Check if it's the user's turn
+                || startPiece == null
+                || colorTurn != startPiece.getTeamColor() // Check if they are moving their own piece
+            ) {
+                sendMessage(session, new ErrorMessage("Invalid move"));
+                return;
+            }
+
+            // 2. Game is updated to represent the move.  Game is updated in the database.
+            try {
+                game.makeMove(move);
+            } catch (InvalidMoveException e) {
+                sendMessage(session, new ErrorMessage("Invalid move"));
+                return;
+            }
+            gameDAO.updateGame(new GameData(gameData.gameID(), gameData.whiteUsername(), gameData.blackUsername(), gameData.gameName(), game));
+
+            // 3. Server sends a LOAD_GAME message to all clients in the game (including the root client) with an updated game.
+            String loadGameMessage = gson.toJson(new LoadGameMessage(game));
+            connections.broadcast(command.getGameID(), "", loadGameMessage);
+
+            // 4. Server sends a Notification message to all other clients in that game informing them what move was made.
+            String notificationMessage = gson.toJson(new NotificationMessage(username + " made a move"));
+            connections.broadcast(command.getGameID(), command.getAuthToken(), notificationMessage);
+
+            // 5. If the move results in check, checkmate or stalemate the server sends a Notification message to all clients.
+            TeamColor opponentColor = game.getTeamTurn();
+            String gameState = null;
+            if (game.isInCheckmate(opponentColor)) {
+                gameState = " in checkmate";
+            } else if (game.isInCheck(opponentColor)) {
+                gameState = " in check";
+            } else if (game.isInStalemate(opponentColor)) {
+                gameState = " in stalemate";
+            }
+
+            if (gameState != null) {
+                String opponentName = opponentColor == TeamColor.WHITE ? gameData.whiteUsername() : gameData.blackUsername();
+                String gameStateMessage = gson.toJson(new NotificationMessage(username + " put " + opponentName + gameState));
+                connections.broadcast(-1, "", gameStateMessage);
+                game.setIsOver(true);
+                gameDAO.updateGame(new GameData(gameData.gameID(), gameData.whiteUsername(), gameData.blackUsername(), gameData.gameName(), game));
+            }
+        } catch (DataAccessException e) {
+            sendMessage(session, new ErrorMessage("Error: invalid game ID"));
         }
-        gameDAO.updateGame(new GameData(gameData.gameID(), gameData.whiteUsername(), gameData.blackUsername(), gameData.gameName(), game));
+    }
 
-        // 3. Server sends a LOAD_GAME message to all clients in the game (including the root client) with an updated game.
-        String loadGameMessage = gson.toJson(new LoadGameMessage(game));
-        connections.broadcast(command.getGameID(), "", loadGameMessage);
+    private void leaveGame(Session session, String username, LeaveGameCommand command) throws IOException {
+        try {
+            // 1. If a player is leaving, then the game is updated to remove the root client. Game is updated in the database.
+            GameData gameData = gameDAO.getGame(command.getGameID());
+            if (Objects.equals(username, gameData.whiteUsername())) {
+                gameData = gameData.renameWhite(null);
+            } else {
+                gameData = gameData.renameBlack(null);
+            }
+            gameDAO.updateGame(gameData);
 
-        // 4. Server sends a Notification message to all other clients in that game informing them what move was made.
-        String notificationMessage = gson.toJson(new NotificationMessage(username + " made a move"));
-        connections.broadcast(command.getGameID(), command.getAuthToken(), notificationMessage);
+            connections.remove(session);
 
-        // 5. If the move results in check, checkmate or stalemate the server sends a Notification message to all clients.
-        TeamColor opponentColor = game.getTeamTurn();
-        String gameState = null;
-        if (game.isInCheckmate(opponentColor)) {
-            gameState = " in checkmate";
-        } else if (game.isInCheck(opponentColor)) {
-            gameState = " in check";
-        } else if (game.isInStalemate(opponentColor)) {
-            gameState = " in stalemate";
+            // 1. Server sends a Notification message to all other clients in that game informing them that the root client left.
+            // This applies to both players and observers.
+            String leaveMessage = gson.toJson(new NotificationMessage(username + " left the game"));
+            connections.broadcast(command.getGameID(), command.getAuthToken(), leaveMessage);
+        } catch (DataAccessException e) {
+            sendMessage(session, new ErrorMessage("Error: invalid game ID"));
         }
+    }
 
-        if (gameState != null) {
-            String opponentName = opponentColor == TeamColor.WHITE ? gameData.whiteUsername() : gameData.blackUsername();
-            String gameStateMessage = gson.toJson(new NotificationMessage(username + " put " + opponentName + gameState));
-            connections.broadcast(-1, "", gameStateMessage);
+    private void resign(Session session, String username, ResignCommand command) throws IOException {
+        try {
+            // Check if game is already over
+            GameData gameData = gameDAO.getGame(command.getGameID());
+            ChessGame game = gameData.game();
+
+            if (game.getIsOver()) {
+                sendMessage(session, new ErrorMessage("Error: game is over"));
+                return;
+            }
+
+            // Check if player
+            if (!Objects.equals(username, gameData.whiteUsername()) && !Objects.equals(username, gameData.blackUsername())) {
+                sendMessage(session, new ErrorMessage("Error: unable to resign as observer"));
+                return;
+            }
+
+            // 1. Server marks the game as over (no more moves can be made). Game is updated in the database.
             game.setIsOver(true);
             gameDAO.updateGame(new GameData(gameData.gameID(), gameData.whiteUsername(), gameData.blackUsername(), gameData.gameName(), game));
+
+            // 2. Server sends a Notification message to all clients in that game informing them that the root client resigned.
+            // This applies to both players and observers.
+            String resignMessage = gson.toJson(new NotificationMessage(username + " resigned"));
+            connections.broadcast(command.getGameID(), "", resignMessage);
+        } catch (DataAccessException e) {
+            sendMessage(session, new ErrorMessage("Error: invalid game ID"));
         }
-
-    }
-
-    private void leaveGame(Session session, String username, LeaveGameCommand command) throws DataAccessException, IOException {
-        // 1. If a player is leaving, then the game is updated to remove the root client. Game is updated in the database.
-        GameData gameData = gameDAO.getGame(command.getGameID());
-        if (Objects.equals(username, gameData.whiteUsername())) {
-            gameData = gameData.renameWhite(null);
-        } else {
-            gameData = gameData.renameBlack(null);
-        }
-        gameDAO.updateGame(gameData);
-
-        connections.remove(session);
-
-        // 1. Server sends a Notification message to all other clients in that game informing them that the root client left.
-        // This applies to both players and observers.
-        String leaveMessage = gson.toJson(new NotificationMessage(username + " left the game"));
-        connections.broadcast(command.getGameID(), command.getAuthToken(), leaveMessage);
-    }
-
-    private void resign(Session session, String username, ResignCommand command) throws IOException, DataAccessException {
-        // Check if game is already over
-        GameData gameData = gameDAO.getGame(command.getGameID());
-        ChessGame game = gameData.game();
-
-        if (game.getIsOver()) {
-            sendMessage(session, new ErrorMessage("Error: game is over"));
-            return;
-        }
-
-        // Check if player
-        if (!Objects.equals(username, gameData.whiteUsername()) && !Objects.equals(username, gameData.blackUsername())) {
-            sendMessage(session, new ErrorMessage("Error: unable to resign as observer"));
-            return;
-        }
-
-        // 1. Server marks the game as over (no more moves can be made). Game is updated in the database.
-        game.setIsOver(true);
-        gameDAO.updateGame(new GameData(gameData.gameID(), gameData.whiteUsername(), gameData.blackUsername(), gameData.gameName(), game));
-
-        // 2. Server sends a Notification message to all clients in that game informing them that the root client resigned.
-        // This applies to both players and observers.
-        String resignMessage = gson.toJson(new NotificationMessage(username + " resigned"));
-        connections.broadcast(command.getGameID(), "", resignMessage);
     }
 
     private static Gson createSerializer() {
