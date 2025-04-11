@@ -110,8 +110,9 @@ public class GameplayClient extends PregameClient {
             case null -> null;
             case "king" -> PieceType.KING;
             case "queen" -> PieceType.QUEEN;
-            case "bishop" -> PieceType.KNIGHT;
+            case "bishop" -> PieceType.BISHOP;
             case "rook" -> PieceType.ROOK;
+            case "knight" -> PieceType.KNIGHT;
             default -> throw new ResponseException(400, "Invalid pawn promotion piece type");
         };
     }
